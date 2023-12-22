@@ -14,40 +14,47 @@
 
 #define STACKSIZE  1000   // maximum storage
 
+/**
+ * @enum symtype
+ * @brief Represents the different types of symbols in the PL/0 programming language.
+ * 
+ * This enumeration defines the possible symbol types that can be encountered in a PL/0 program.
+ * Each symbol type corresponds to a specific token in the PL/0 language.
+ */
 enum symtype
 {
-	SYM_NULL,
-	SYM_IDENTIFIER,
-	SYM_NUMBER,
-	SYM_SCOPE,
-	SYM_PLUS,
-	SYM_MINUS,
-	SYM_TIMES,
-	SYM_SLASH,
-	SYM_ODD,
-	SYM_EQU,
-	SYM_NEQ,
-	SYM_LES,
-	SYM_LEQ,
-	SYM_GTR,
-	SYM_GEQ,
-	SYM_LPAREN,
-	SYM_RPAREN,
-	SYM_COMMA,
-	SYM_SEMICOLON,
-	SYM_PERIOD,
-	SYM_BECOMES,
-    SYM_BEGIN,
-	SYM_END,
-	SYM_IF,
-	SYM_THEN,
-	SYM_WHILE,
-	SYM_DO,
-	SYM_CALL,
-	SYM_CONST,
-	SYM_VAR,
-	SYM_PROCEDURE,
-	SYM_PRINT
+	SYM_NULL,           // undefined symbol
+	SYM_IDENTIFIER,     // identifier
+	SYM_NUMBER,         // number
+	SYM_SCOPE,          // '::'
+	SYM_PLUS,           // '+'
+	SYM_MINUS,          // '-'
+	SYM_TIMES,          // '*'
+	SYM_SLASH,          // '/'
+	SYM_ODD,            // 'odd'
+	SYM_EQU,            // '='
+	SYM_NEQ,            // '<>'
+	SYM_LES,            // '<'
+	SYM_LEQ,            // '<='
+	SYM_GTR,            // '>'
+	SYM_GEQ,            // '>='
+	SYM_LPAREN,         // '('
+	SYM_RPAREN,         // ')'
+	SYM_COMMA,          // ','
+	SYM_SEMICOLON,      // ';'
+	SYM_PERIOD,         // '.'
+	SYM_BECOMES,        // ':='
+    SYM_BEGIN,          // 'begin'
+	SYM_END,            // 'end'
+	SYM_IF,             // 'if'
+	SYM_THEN,           // 'then'
+	SYM_WHILE,          // 'while'
+	SYM_DO,             // 'do'
+	SYM_CALL,           // 'call'
+	SYM_CONST,          // 'const'
+	SYM_VAR,            // 'var'
+	SYM_PROCEDURE,      // 'procedure'
+	SYM_PRINT           // 'print'
 };
 
 enum idtype
@@ -138,12 +145,18 @@ char* word[NRW + 1] =
 	"odd", "procedure", "then", "var", "while", "print"
 };
 
+/**
+ * Array of symbols representing reserved words in PL/0 language.
+ */
 int wsym[NRW + 1] =
 {
 	SYM_NULL, SYM_BEGIN, SYM_CALL, SYM_CONST, SYM_DO, SYM_END,
 	SYM_IF, SYM_ODD, SYM_PROCEDURE, SYM_THEN, SYM_VAR, SYM_WHILE, SYM_PRINT
 };
 
+/**
+ * Array of symbols representing special characters in PL/0 language.
+ */
 int ssym[NSYM + 1] =
 {
 	SYM_NULL, SYM_PLUS, SYM_MINUS, SYM_TIMES, SYM_SLASH,
