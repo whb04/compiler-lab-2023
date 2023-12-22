@@ -8,7 +8,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "PL0.h"
+#include "pl0.h"
 #include "set.c"
 
 //////////////////////////////////////////////////////////////////////
