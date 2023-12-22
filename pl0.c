@@ -605,17 +605,14 @@ void statement(symset fsys)
 	else if (sym == SYM_PRINT)
 	{ // print statement
 		getsym();
-		if (sym == SYM_LPAREN)
-		{
-			getsym();
-		}
-		else
+		if (sym != SYM_LPAREN)
 		{
 			error(22); // Missing '('.
 		}
 		do
 		{
-			set1 = createset(SYM_RPAREN, SYM_NULL);
+			getsym();
+			set1 = createset(SYM_RPAREN, SYM_COMMA, SYM_NULL);
 			set = uniteset(set1, fsys);
 			expression(set);
 			destroyset(set1);

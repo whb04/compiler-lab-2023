@@ -13,5 +13,5 @@ begin
   i := 1;
   call p;
   call q;
-  print(i*i+2*(i+1));
+  print(i, i*i+2*(i+1));
 end.
