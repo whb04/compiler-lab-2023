@@ -7,6 +7,16 @@ typedef struct snode
 	struct snode* next;
 } snode, *symset;
 
+/**
+ * @brief Declaration of symbol sets.
+ * 
+ * This file declares the following symbol sets:
+ * - phi: an empty symbol set
+ * - declbegsys: symbol set for the beginning of a declaration
+ * - statbegsys: symbol set for the beginning of a statement
+ * - facbegsys: symbol set for the beginning of a factor
+ * - relset: symbol set for relational operators
+ */
 symset phi, declbegsys, statbegsys, facbegsys, relset;
 
 symset createset(int data, .../* SYM_NULL */);

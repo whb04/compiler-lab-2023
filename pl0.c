@@ -26,6 +26,12 @@ void error(int n)
 } // error
 
 //////////////////////////////////////////////////////////////////////
+/**
+ * Reads a character from the input file and stores it in the variable 'ch'.
+ * If the end of the file is reached, it prints an error message and exits the program.
+ * If the end of the line is reached, it reads the next line from the input file.
+ * This function is used to implement the 'getch' operation in the PL/0 compiler.
+ */
 void getch(void)
 {
 	if (cc == ll)
@@ -37,12 +43,11 @@ void getch(void)
 		}
 		ll = cc = 0;
 		printf("%5d  ", cx);
-		while ( (!feof(infile)) // added & modified by alex 01-02-09
-			    && ((ch = getc(infile)) != '\n'))
+		while ((!feof(infile)) && ((ch = getc(infile)) != '\n'))
 		{
 			printf("%c", ch);
 			line[++ll] = ch;
-		} // while
+		}
 		printf("\n");
 		line[++ll] = ' ';
 	}
@@ -101,9 +106,14 @@ void getsym(void)
 			sym = SYM_BECOMES; // :=
 			getch();
 		}
+		else if (ch == ':')
+		{
+			sym = SYM_SCOPE; // ::
+			getch();
+		}
 		else
 		{
-			sym = SYM_NULL;       // illegal?
+			sym = SYM_NULL;       // illegal
 		}
 	}
 	else if (ch == '>')
@@ -883,7 +893,7 @@ void main ()
 	// create begin symbol sets
 	declbegsys = createset(SYM_CONST, SYM_VAR, SYM_PROCEDURE, SYM_NULL);
 	statbegsys = createset(SYM_BEGIN, SYM_CALL, SYM_IF, SYM_WHILE, SYM_NULL);
-	facbegsys = createset(SYM_IDENTIFIER, SYM_NUMBER, SYM_LPAREN, SYM_MINUS, SYM_NULL);
+	facbegsys = createset(SYM_IDENTIFIER, SYM_NUMBER, SYM_LPAREN, SYM_MINUS, SYM_SCOPE, SYM_NULL);
 
 	err = cc = cx = ll = 0; // initialize global variables
 	ch = ' ';
