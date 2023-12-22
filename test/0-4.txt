@@ -1,0 +1,17 @@
+var i;
+procedure p;
+begin
+  i := 2;
+  print(i);
+end;
+procedure q;
+begin
+  i := i + 1;
+  print(i);
+end;
+begin
+  i := 1;
+  call p;
+  call q;
+  print(i*i+2*(i+1));
+end.

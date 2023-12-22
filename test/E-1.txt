@@ -1,0 +1,5 @@
+var i,i;
+begin
+  i := -1;
+  i := i + 1;
+end.

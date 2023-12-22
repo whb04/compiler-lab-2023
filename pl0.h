@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#define NRW        11     // number of reserved words
+#define NRW        12     // number of reserved words
 #define TXMAX      500    // length of identifier table
 #define MAXNUMLEN  14     // maximum number of digits in numbers
 #define NSYM       10     // maximum number of symbols in array ssym and csym
@@ -19,6 +19,7 @@ enum symtype
 	SYM_NULL,
 	SYM_IDENTIFIER,
 	SYM_NUMBER,
+	SYM_SCOPE,
 	SYM_PLUS,
 	SYM_MINUS,
 	SYM_TIMES,
@@ -45,7 +46,8 @@ enum symtype
 	SYM_CALL,
 	SYM_CONST,
 	SYM_VAR,
-	SYM_PROCEDURE
+	SYM_PROCEDURE,
+	SYM_PRINT
 };
 
 enum idtype
@@ -55,7 +57,7 @@ enum idtype
 
 enum opcode
 {
-	LIT, OPR, LOD, STO, CAL, INT, JMP, JPC
+	LIT, OPR, LOD, STO, CAL, INT, JMP, JPC, PRT
 };
 
 enum oprcode
@@ -119,11 +121,11 @@ char id[MAXIDLEN + 1]; // last identifier read
 int  num;        // last number read
 int  cc;         // character count
 int  ll;         // line length
-int  kk;
-int  err;
+int  kk; 	   // program text index
+int  err; 	  // error flag
 int  cx;         // index of current instruction to be generated.
-int  level = 0;
-int  tx = 0;
+int  level = 0; // current depth of block nesting
+int  tx = 0;    // current table index
 
 char line[80];
 
@@ -133,13 +135,13 @@ char* word[NRW + 1] =
 {
 	"", /* place holder */
 	"begin", "call", "const", "do", "end","if",
-	"odd", "procedure", "then", "var", "while"
+	"odd", "procedure", "then", "var", "while", "print"
 };
 
 int wsym[NRW + 1] =
 {
 	SYM_NULL, SYM_BEGIN, SYM_CALL, SYM_CONST, SYM_DO, SYM_END,
-	SYM_IF, SYM_ODD, SYM_PROCEDURE, SYM_THEN, SYM_VAR, SYM_WHILE
+	SYM_IF, SYM_ODD, SYM_PROCEDURE, SYM_THEN, SYM_VAR, SYM_WHILE, SYM_PRINT
 };
 
 int ssym[NSYM + 1] =
@@ -166,6 +168,16 @@ typedef struct
 	int  value;
 } comtab;
 
+/**
+ * @brief The symbol table entry for the PL/0 compiler.
+ * 
+ * This structure is used to store information about symbols in the PL/0 programming language, such as variables and constants.
+ * It can be used as a `comtab` or a `mask` type, depending on the kind of the symbol.
+ * Constants are stored as `comtab` types, while procedures and variables are stored as `mask` types.
+ * 
+ * @see table
+ * @see mask
+ */
 comtab table[TXMAX];
 
 typedef struct
