@@ -26,12 +26,14 @@ unary_term -> array_term
 			  | *unary_term
 array_term -> fact
 			  | array_term[expr]
-fact -> scope_term
+fact -> scope
 		| number 
 		| -fact 
 		| (expr)
-scope_term -> ident
-			  | scope_term::ident
+scope -> prim_scope
+		 | ::prim_scope
+prim_scope -> ident
+			  | prim_scope::ident
 ```
 
 ### 指针与数组声明的文法
