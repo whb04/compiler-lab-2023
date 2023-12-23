@@ -357,7 +357,26 @@ void listcode(int from, int to)
 
 //////////////////////////////////////////////////////////////////////
 /*
-fact -> ident 
+S -> id 
+	| S::id
+*/
+void S(symset fsys){
+
+}
+
+//////////////////////////////////////////////////////////////////////
+/*
+scope -> S 
+		| ::S
+*/
+void scope(symset fsys){
+	
+}
+
+
+//////////////////////////////////////////////////////////////////////
+/*
+fact -> scope
 		| number 
 		| -fact 
 		| (expr)
@@ -433,17 +452,7 @@ void factor(symset fsys)
 
 //////////////////////////////////////////////////////////////////////
 /*
-scope_term -> fact
-			  | scope_term::ident
-*/
-void scope_term(symset fsys){
-	
-}
-
-
-//////////////////////////////////////////////////////////////////////
-/*
-array_term -> scope_term
+array_term -> fact
 			  | array_term[expr]
 */
 void array_term(symset fsys){
@@ -472,12 +481,12 @@ void term(symset fsys)
 	symset set;
 	
 	set = uniteset(fsys, createset(SYM_TIMES, SYM_SLASH, SYM_NULL));
-	factor(set);
+	unary_term(set);
 	while (sym == SYM_TIMES || sym == SYM_SLASH)
 	{
 		mulop = sym;
 		getsym();
-		factor(set);
+		unary_term(set);
 		if (mulop == SYM_TIMES)
 		{
 			gen(OPR, 0, OPR_MUL);
