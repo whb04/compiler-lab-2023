@@ -1,5 +1,9 @@
 var i,j;
 begin
-  i := -1;
-  j := i + 1;
+    i := -1;
+    j := i + 1;
+    print(i, j);
 end.
+
+# Expected output:
+-1 0

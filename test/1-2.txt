@@ -1,0 +1,12 @@
+var a;
+var b[10];
+var *c;
+var **d[16];
+var ****x[3][4][5], *y, z[6], **********w[1][1][1][1][2][1][2][1];
+begin
+    a := 1;
+    print(a);
+end.
+
+# Expected output:
+1

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "set.h"
 
 #define NRW        12     // number of reserved words 添加新的保留字需要增大NRW
 #define TXMAX      500    // length of identifier table 标识符最多数量
@@ -13,6 +14,8 @@
 #define MAXSYM     30     // maximum number of symbols  
 
 #define STACKSIZE  1000   // maximum storage
+
+#define MAX_DIM    100    //maximum dim of array
 
 /**
  * @enum symtype
@@ -54,19 +57,20 @@ enum symtype
 	SYM_CONST,          // 'const'
 	SYM_VAR,            // 'var'
 	SYM_PROCEDURE,      // 'procedure'
-	//new
+	SYM_LMIDPAREN,		//`[`
+	SYM_RMIDPAREN,		//`]`
 	SYM_PRINT,           // 'print'
 	SYM_ADDRESS        // '&'，取地址符
 };
 
 enum idtype
 {
-	ID_CONSTANT, ID_VARIABLE, ID_PROCEDURE
+	ID_CONSTANT, ID_VARIABLE, ID_PROCEDURE, ID_ARRAY
 };
 
 enum opcode
 {
-	LIT, OPR, LOD, STO, CAL, INT, JMP, JPC, PRT
+	LIT, OPR, LOD, STO, CAL, INT, JMP, JPC, PRT, STA, LEA, LDA
 };
 
 enum oprcode
@@ -138,6 +142,17 @@ int  tx = 0;    // current table index 当前符号表的索引
 
 char line[80];
 
+typedef struct array_attribute
+{
+	short address;//数组的基地址(即数组第一个元素在栈中的位置)
+	int size;//数组大小
+	int dim;//总维数 
+	int dim_size[MAX_DIM + 1];//每一维的范围大小
+} array_attribute;
+array_attribute array_table[TXMAX];//数组信息表
+struct array_attribute* Last_Array; //指向最后读到的数组
+int  arr_tx = 0; // 当前读到的数组在数组表中的索引
+
 instruction code[CXMAX];
 
 char* word[NRW + 1] =
@@ -204,5 +219,12 @@ typedef struct
 } mask; // 词法分析中用于描述过程和变量的结构（放到符号表里），与comtab大小相同
 
 FILE* infile;
+
+void factor(symset fsys);
+void scope_term(symset fsys);
+void array_term(symset fsys);
+void unary_term(symset fsys);
+void term(symset fsys);
+void expression(symset fsys);
 
 // EOF PL0.h
