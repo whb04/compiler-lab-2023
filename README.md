@@ -42,12 +42,15 @@ prim_scope -> ident
 
 复杂的指针与数组嵌套指类似var * (*q[10])[10]这样的。
 
+注意，现在文法符号与函数名不是一一对应的了。
+
 ```
-block -> constdeclaration block
-		 | vardeclaration block
-		 | "procedure" ident; block;
+block -> "const" constdeclaration; block
+		 | "var" variable_declaration; block
+		 | "procedure" ident; block; block
 		 | statement
-variable_declaration -> "var" declarator
+variable_declaration -> declarator
+						| delcarator, variable_declaration
 declarator -> direct_declarator
 			  | pointer direct_declarator
 pointer -> *
@@ -62,11 +65,12 @@ direct_declarator -> ident
 只需删去最后一行。可以实现实验文档中所有的例子。
 
 ```
-block -> const_declaration block
-		 | variable_declaration block
-		 | procedure_declaration block
+block -> "const" constdeclaration; block
+		 | "var" variable_declaration; block
+		 | "procedure" ident; block; block
 		 | statement
-variable_declaration -> "var" declarator
+variable_declaration -> declarator
+						| delcarator, variable_declaration
 declarator -> direct_declarator
 			  | pointer direct_declarator
 pointer -> *
