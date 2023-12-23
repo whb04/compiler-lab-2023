@@ -38,6 +38,15 @@
 
 #### Parsing
 
+定义数组的文法：
+
+```
+S -> var arrs;
+arrs -> arr | arrs,arr
+arr -> ptr | arr[size]
+ptr -> id | *ptr
+```
+
 *To do...*
 
 #### Semantic Analysis
@@ -59,8 +68,8 @@
 计划再分解 factor 到 word
 
 ```
-expr -> term+term | term-term
-term -> fact*fact | fact/fact
+expr -> term | expr+term | expr-term
+term -> fact | term*fact | term/fact
 fact -> word | number | -fact | (expr)
 word -> ident | word::ident
 ```
