@@ -30,10 +30,10 @@ fact -> scope
 		| number 
 		| -fact 
 		| (expr)
-scope -> S 
-		| ::S
-S -> id 
-	| S::id
+scope -> prim_scope
+		 | ::prim_scope
+prim_scope -> ident
+			  | prim_scope::ident
 ```
 
 ### 指针与数组声明的文法
