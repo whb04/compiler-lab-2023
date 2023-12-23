@@ -1,0 +1,18 @@
+var i;
+procedure p;
+    var i;
+begin
+    i := 2;
+    print(i, ::i);
+end;
+
+begin
+    i := 1;
+    print(i);
+    call p;
+    print(i);
+end.
+
+# Expected output:
+1
+2 1

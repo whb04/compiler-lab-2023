@@ -118,7 +118,7 @@ char* err_msg[] =
 /* 23 */    "The symbol can not be followed by a factor.",
 /* 24 */    "The symbol can not be as the beginning of an expression.",
 /* 25 */    "The number is too great.",
-/* 26 */    "",
+/* 26 */    "Can not locate identifier in a non-procedure block.",
 /* 27 */    "",
 /* 28 */    "",
 /* 29 */    "",
@@ -138,20 +138,19 @@ int  kk; 	   // program text index
 int  err; 	  // error flag
 int  cx;         // index of current instruction to be generated.当前要生成第几条中间代码
 int  level = 0; // current depth of block nesting
-int  tx = 0;    // current table index 当前符号表的索引
 
 char line[80];
 
-typedef struct array_attribute
-{
-	short address;//数组的基地址(即数组第一个元素在栈中的位置)
-	int size;//数组大小
-	int dim;//总维数 
-	int dim_size[MAX_DIM + 1];//每一维的范围大小
-} array_attribute;
-array_attribute array_table[TXMAX];//数组信息表
-struct array_attribute* Last_Array; //指向最后读到的数组
-int  arr_tx = 0; // 当前读到的数组在数组表中的索引
+// typedef struct array_attribute
+// {
+// 	short address;//数组的基地址(即数组第一个元素在栈中的位置)
+// 	int size;//数组大小
+// 	int dim;//总维数 
+// 	int dim_size[MAX_DIM + 1];//每一维的范围大小
+// } array_attribute;
+// array_attribute array_table[TXMAX];//数组信息表
+// struct array_attribute* Last_Array; //指向最后读到的数组
+// int  arr_tx = 0; // 当前读到的数组在数组表中的索引
 
 instruction code[CXMAX];
 
@@ -185,10 +184,10 @@ char csym[NSYM + 1] =
 	' ', '+', '-', '*', '/', '(', ')', '=', ',', '.', ';'
 };
 
-#define MAXINS   8
+#define MAXINS   12
 char* mnemonic[MAXINS] =
 {
-	"LIT", "OPR", "LOD", "STO", "CAL", "INT", "JMP", "JPC"
+	"LIT", "OPR", "LOD", "STO", "CAL", "INT", "JMP", "JPC", "PRT", "STA", "LEA", "LDA"
 };
 
 // typedef struct
@@ -224,38 +223,44 @@ typedef struct
 	char name[MAXIDLEN + 1]; // 名字
 	int kind; // const = 0, var = 1, proc = 2, array = 3
 	int level; // 所在层
-	int address; // 相对地址
-	int pos; // 符号在自己类型的属性表中的位置
-} symtab;
+	void *attr; // 符号在自己类型的属性表中的表项位置
+} sym_attr;
+int sym_num;
+sym_attr sym_tab[TXMAX];
 
 // 常量表
-int const_num, const_table[TXMAX];
+int const_num;
+int const_tab[TXMAX]; // 常量的值
+
+// 变量表
+int var_num;
+int var_tab[TXMAX]; // 变量的相对地址
 
 // 数组表
 typedef struct
 {
+	int address; // 数组的相对地址
 	int size; // 数组大小
 	int dim; // 维数
 	int dim_size[MAX_DIM + 1]; // 每一维的范围大小
 } array_attr;
 int arr_num;
-array_attr array_table[TXMAX];
+array_attr array_tab[TXMAX];
+array_attr* last_array; // 指向最后读到的数组
 
 // 过程表
 typedef struct
 {
-	int parent; // 父过程在符号表中的位置
-	int start; // 过程开始位置
-	int end; // 过程结束位置
-	// 过程的作用域为符号表中的区间[start, end)
+	int address; // 过程的入口地址
+	int active; // 过程是否在作用域内
 } proc_attr;
 int proc_num;
-proc_attr proc_table[TXMAX];
+proc_attr proc_tab[TXMAX]; // 过程的入口地址
 
 
 FILE* infile;
 
-void prim_scope(symset fsys);
+void prim_scope(symset fsys, int proc);
 void scope(symset fsys);
 void factor(symset fsys);
 void array_term(symset fsys);

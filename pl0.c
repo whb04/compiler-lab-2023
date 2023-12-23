@@ -199,13 +199,11 @@ void test(symset s1, symset s2, int n)
 int dx;  // data allocation index
 
 // enter object(constant, variable or procedre) into table.
-void enter(int kind)
+void enter(int kind, int proc)
 {
-	mask* mk;
-
-	tx++;
-	strcpy(table[tx].name, id);
-	table[tx].kind = kind;
+	sym_num++;
+	strcpy(sym_tab[sym_num].name, id);
+	sym_tab[sym_num].kind = kind;
 	switch (kind)
 	{
 	case ID_CONSTANT:
@@ -214,27 +212,27 @@ void enter(int kind)
 			error(25); // The number is too great.
 			num = 0;
 		}
-		table[tx].value = num;
+		const_tab[const_num] = num;
+		sym_tab[sym_num].attr = &const_tab[const_num++];
 		break;
 	case ID_VARIABLE:
-		mk = (mask*) &table[tx];
-		mk->level = level;
-		mk->address = dx++;
+		var_tab[var_num] = dx++;
+		sym_tab[sym_num].level = level;
+		sym_tab[sym_num].attr = &var_tab[var_num++];
 		break;
 	case ID_PROCEDURE:
-		mk = (mask*) &table[tx];
-		mk->level = level;
+		// 过程的入口地址在生成代码的时候回填
+		proc_tab[proc_num].active = 1;
+		sym_tab[sym_num].level = level;
+		sym_tab[sym_num].attr = &proc_tab[proc_num++];
 		break;
 	case ID_ARRAY:
-		mk = (mask*)&table[tx];
-		mk->level = level;
-		mk->address = arr_tx;//表项地址为在数组信息表中的索引
-		Last_Array = &(array_table[arr_tx]);
-		array_table[arr_tx].dim = 0;
-		array_table[arr_tx].size = 1;
-		array_table[arr_tx].dim_size[1] = 0; 
-		arr_tx++;
-		//这里我们无法给数组的size给出真正定义,所以我们不对dx做增大(即分配空间),等到分析完整个数组在做
+		// 数组的相对地址在生成代码的时候回填
+		// 这里我们无法给数组的size给出真正定义,所以我们不对dx做增大(即分配空间),等到分析完整个数组在做
+		array_tab[arr_num].dim = 0;
+		array_tab[arr_num].size = 1;
+		last_array = &array_tab[arr_num];
+		sym_tab[sym_num].attr = &array_tab[arr_num++];
 		break;	
 	} // switch
 } // enter
@@ -244,11 +242,31 @@ void enter(int kind)
 int position(char* id)
 {
 	int i;
-	strcpy(table[0].name, id);
-	i = tx + 1;
-	while (strcmp(table[--i].name, id) != 0);
+	strcpy(sym_tab[0].name, id);
+	i = sym_num + 1;
+	while (strcmp(sym_tab[--i].name, id) != 0);
 	return i;
 } // position
+
+// locates identifier in current block.
+int locate(char* id, int proc)
+{
+	proc_attr *p;
+	int i;
+	p = sym_tab[proc].attr;
+	if (sym_tab[proc].kind != ID_PROCEDURE)
+		error(26); // Error: Can not locate identifier in a non-procedure block.
+	if (!p->active)
+		return 0;
+	for (i = proc + 1; i <= sym_num; i++)
+	{
+		if (sym_tab[i].level > sym_tab[proc].level + 1)
+			break;
+		if (strcmp(sym_tab[i].name, id) == 0)
+			return i;
+	}
+	return 0;
+} // locate
 
 //////////////////////////////////////////////////////////////////////
 void constdeclaration()
@@ -263,7 +281,7 @@ void constdeclaration()
 			getsym();
 			if (sym == SYM_NUMBER)
 			{
-				enter(ID_CONSTANT);
+				enter(ID_CONSTANT, 0);
 				getsym();
 			}
 			else
@@ -287,10 +305,9 @@ void dimdeclaration() {
 		switch (sym)
 		{
 		case SYM_NUMBER:
-			if (Last_Array->dim == MAX_DIM) { error(33); }//报错:维数过多
-			Last_Array->dim = Last_Array->dim + 1;//总维数+1
-			Last_Array->dim_size[Last_Array->dim] = num;
-			Last_Array->size = Last_Array->size * num;//数组大小*最外维范围大小
+			if (last_array->dim >= MAX_DIM) { error(33); } // 报错:维数过多
+			last_array->dim_size[last_array->dim++] = num; // 记录维度大小
+			last_array->size *= num; // 更新数组大小
 			getsym();
 			if (sym == SYM_RMIDPAREN) //继续分析下一维
 			{ 
@@ -304,24 +321,24 @@ void dimdeclaration() {
 		}
 	}
 	else {
-			dx += Last_Array->size;//为数组分配空间
-			Last_Array->address = dx - 1;//记录最后访问到的数组的基址		
+		last_array->address = dx;
+		dx += last_array->size;//为数组分配空间
 	}
 }
 
 //////////////////////////////////////////////////////////////////////
-void array_access(short arr_index, int dim, symset fsys) {//dim代表正在分析的维度
+void array_access(array_attr *a, int d, symset fsys) { // d代表正在分析的维度
 	getsym();
 	if (sym == SYM_LMIDPAREN) {
-		gen(LIT, 0, array_table[arr_index].dim_size[dim + 1]);//将下一维size压栈
+		gen(LIT, 0, a->dim_size[d + 1]);//将下一维size压栈
 		gen(OPR, 0, OPR_MUL);//将栈顶和次栈顶数值相乘，例如对应a[10][10]，a[3][4]，在读到3时，执行的中间代码依次为0*10=0，0+3=3,3*10=30,30+4=34.
 		getsym();
 		expression(fsys);
 		//expression中已经获取了下一个标识
 		gen(OPR, 0, OPR_ADD);//加上最外维上的偏移
-		array_access(arr_index, dim + 1, fsys);//访问下一维
+		array_access(a, d + 1, fsys);//访问下一维
 	}
-	else if (dim != array_table[arr_index].dim) { error(30); }//维度分析错误
+	else if (d != a->dim) { error(30); }//维度分析错误
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -343,18 +360,18 @@ void declarator(symset fsys)
 }
 
 //////////////////////////////////////////////////////////////////////
-void vardeclaration(void)
+void vardeclaration()
 {
 	if (sym == SYM_IDENTIFIER)
 	{
 		getsym();
 		if (sym == SYM_LMIDPAREN) {
-			enter(ID_ARRAY);
+			enter(ID_ARRAY, 0);
 			dimdeclaration();
 		}
 		else
 		{
-			enter(ID_VARIABLE); 
+			enter(ID_VARIABLE, 0); 
 		}
 	}
 	else
@@ -382,9 +399,51 @@ prim_scope -> ident
 			  | prim_scope::ident
 */
 //未完成
-void prim_scope(symset fsys)
+void prim_scope(symset fsys, int proc)
 {
-
+	int i;
+	int *c;
+	int *v;
+	proc_attr *p;
+	if (sym == SYM_IDENTIFIER)
+	{
+		if (proc)
+			i = locate(id, proc);
+		else
+			i = position(id);
+		if (!i)
+			error(11); // Undeclared identifier.
+	}
+	else
+	{
+		error(4); // There must be an identifier to follow 'const', 'var', or 'procedure'.
+	}
+	getsym();
+	if (sym == SYM_SCOPE)
+	{
+		getsym();
+		prim_scope(fsys, i);
+	}
+	else
+	{
+		switch (sym_tab[i].kind)
+		{
+		case ID_CONSTANT:
+			c = sym_tab[i].attr;
+			gen(LIT, 0, *c);
+			break;
+		case ID_VARIABLE:
+			v = sym_tab[i].attr;
+			gen(LOD, level - sym_tab[i].level, *v);
+			break;
+		case ID_PROCEDURE:
+			error(21); // Procedure identifier can not be in an expression.
+			break;
+		case ID_ARRAY:
+			array_access(sym_tab[i].attr, 0, fsys);
+			break;
+		} // switch
+	}
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -392,10 +451,18 @@ void prim_scope(symset fsys)
 scope -> prim_scope
 		 | ::prim_scope
 */
-//未完成
 void scope(symset fsys)
 {
-	
+	int i;
+	if (sym == SYM_SCOPE)
+	{
+		getsym();
+		prim_scope(fsys, 1);
+	}
+	else
+	{
+		prim_scope(fsys, 0);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -509,7 +576,8 @@ void term(symset fsys)
 	symset set;
 	
 	set = uniteset(fsys, createset(SYM_TIMES, SYM_SLASH, SYM_NULL));
-	unary_term(set);
+	// unary_term(set);
+	factor(set);
 	while (sym == SYM_TIMES || sym == SYM_SLASH)
 	{
 		mulop = sym;
@@ -613,23 +681,25 @@ void condition(symset fsys)
 //////////////////////////////////////////////////////////////////////
 void statement(symset fsys)
 {
-	int i, cx1, cx2, arr_index;
+	int i, cx1, cx2;
 	symset set1, set;
+	sym_attr *s;
+	array_attr *a;
+	proc_attr *p;
 
 	if (sym == SYM_IDENTIFIER)//如果是id开始,我们期待它是一个赋值语句
 	{ // variable assignment
-		mask* mk;
 		if (! (i = position(id)))//id再符号表中不存在,报错
 		{
 			error(11); // Undeclared identifier.
 		}
-		else if (table[i].kind != ID_VARIABLE&& table[i].kind != ID_ARRAY)//id不是变量或者数组变量,报错,非法赋值,i=0
+		else if (sym_tab[i].kind != ID_VARIABLE&& sym_tab[i].kind != ID_ARRAY)//id不是变量或者数组变量,报错,非法赋值,i=0
 		{
 			error(12); // Illegal assignment.
 			i = 0;
 		}
 
-		if (table[i].kind == ID_VARIABLE)//variable assignment
+		if (sym_tab[i].kind == ID_VARIABLE)//variable assignment
 		{
 
 			getsym();//我们期待获得一个`:=`符号
@@ -642,19 +712,19 @@ void statement(symset fsys)
 				error(13); // ':=' expected.
 			}
 			expression(fsys);//expression分析
-			mk = (mask*) &table[i];//这里i就是position,它是取到左值再符号表中的位置
+			s = &sym_tab[i];//这里i就是position,它是取到左值再符号表中的位置
 			if (i)//这里i是看有没有error  如果没有error 就进行STO操作,即将栈顶的expression的值赋给左值
 			{
-				gen(STO, level - mk->level, mk->address);
+				gen(STO, level - s->level, *(int* )(s->attr));
 			}
 		}
-		else if (table[i].kind == ID_ARRAY) {//数组元素的赋值
-			mk = (mask*)&table[i];
-			arr_index = mk->address;
-			gen(LEA, level - mk->level, array_table[arr_index].address);
+		else if (sym_tab[i].kind == ID_ARRAY) {//数组元素的赋值
+			s = &sym_tab[i];
+			a = s->attr;
+			gen(LEA, level - s->level, a->address); // 将数组元素的地址压栈
 			gen(LIT, 0, 0);
 			set1 = createset(SYM_RMIDPAREN);
-			array_access(arr_index, 0, set1);//访问数组元素
+			array_access(a, 0, set1);//访问数组元素
 			//array_access 已经获取下一个标识符
 			if (sym != SYM_BECOMES) { error(13); }
 			gen(OPR, 0, OPR_MIN);
@@ -678,11 +748,11 @@ void statement(symset fsys)
 			{
 				error(11); // Undeclared identifier.
 			}
-			else if (table[i].kind == ID_PROCEDURE)
+			else if (sym_tab[i].kind == ID_PROCEDURE)
 			{
-				mask* mk;
-				mk = (mask*) &table[i];
-				gen(CAL, level - mk->level, mk->address);
+				s = &sym_tab[i];
+				p = s->attr;
+				gen(CAL, level - s->level, p->address);
 			}
 			else
 			{
@@ -797,15 +867,16 @@ void statement(symset fsys)
 void block(symset fsys)
 {
 	int cx0; // initial code index
-	mask* mk;
 	int block_dx;
-	int savedTx;
+	int savedSn; // saved procedure symbol number
 	symset set1, set;
+	proc_attr *p, *q;
 
 	dx = 3; // data allocation index
 	block_dx = dx; // useless? because dx will be reseted by next block_dx = dx;
-	mk = (mask*) &table[tx];
-	mk->address = cx;
+	savedSn = sym_num;
+	p = sym_tab[sym_num].attr;
+	p->address = cx;
 	// first instruction is JMP, jump to the main program
 	gen(JMP, 0, 0); // address placeholder, will be backpatched later
 	if (level > MAXLEVEL)
@@ -865,7 +936,7 @@ void block(symset fsys)
 			getsym();
 			if (sym == SYM_IDENTIFIER)
 			{
-				enter(ID_PROCEDURE);
+				enter(ID_PROCEDURE, savedSn);
 				getsym();
 			}
 			else
@@ -884,13 +955,15 @@ void block(symset fsys)
 			}
 
 			level++;
-			savedTx = tx;
+			savedSn = sym_num;
 			set1 = createset(SYM_SEMICOLON, SYM_NULL);
 			set = uniteset(set1, fsys);
 			block(set);
 			destroyset(set1);
 			destroyset(set);
-			tx = savedTx;
+			sym_num = savedSn;
+			q = sym_tab[sym_num].attr;
+			q->active = 0;
 			level--;
 
 			if (sym == SYM_SEMICOLON)
@@ -916,8 +989,8 @@ void block(symset fsys)
 	}
 	while (inset(sym, declbegsys));
 
-	code[mk->address].a = cx; // backpatch jump address of procedure
-	mk->address = cx;
+	code[p->address].a = cx; // backpatch jump address of procedure
+	p->address = cx; // procedure address, is index of instruction INT
 	cx0 = cx;
 	gen(INT, 0, block_dx); // allocate space for this procedure
 	set1 = createset(SYM_SEMICOLON, SYM_END, SYM_NULL);
@@ -1136,6 +1209,9 @@ void main ()
 	set1 = createset(SYM_PERIOD, SYM_NULL);
 	set2 = uniteset(declbegsys, statbegsys);
 	set = uniteset(set1, set2);
+	id[0] = 0; // name of main program is empty string ""
+	enter(ID_PROCEDURE, 0); // enter the main program into 
+	sym_tab[1].level = -1; // set the level of main program to -1
 	block(set);
 	destroyset(set1);
 	destroyset(set2);

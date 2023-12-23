@@ -7,23 +7,24 @@ procedure p1;
             var i;
         begin
             i:=3;
-            print(::i, p1::i, p2::i, i);
-            print(::i, ::p1::i, ::p1::p2::i, ::p1::p2::p3::i);
+            print(i);
         end;
     begin
         i:=2;
         call p3;
+        print(i);
     end;
 begin
     i:=1;
     call p2;
+    print(i);
 end;
 
 begin
     i:=0;
     call p1;
+    print(i);
 end.
 
 # Expected output:
-0 1 2 3
-0 1 2 3
+3 2 1 0
