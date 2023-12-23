@@ -4,7 +4,7 @@
 #define NRW        12     // number of reserved words 添加新的保留字需要增大NRW
 #define TXMAX      500    // length of identifier table 标识符最多数量
 #define MAXNUMLEN  14     // maximum number of digits in numbers 数字最大长度
-#define NSYM       12     // maximum number of symbols in array ssym and csym;FPT:增加了`[`和`]`，所以要增大NSYM到12
+#define NSYM       13     // maximum number of symbols in array ssym and csym;FPT:增加了`[`和`]`，所以要增大NSYM到12
 #define MAXIDLEN   10     // length of identifiers 标识符最大长度
 
 #define MAXADDRESS 32767  // maximum address 
@@ -179,12 +179,12 @@ int ssym[NSYM + 1] =
 	SYM_NULL, SYM_PLUS, SYM_MINUS, SYM_TIMES, SYM_SLASH,
 	SYM_LPAREN, SYM_RPAREN, SYM_EQU, SYM_COMMA, SYM_PERIOD, SYM_SEMICOLON,
 	//FPT:增加`[`和`]`
-	SYM_LMIDPAREN,SYM_RMIDPAREN
+	SYM_LMIDPAREN,SYM_RMIDPAREN, SYM_ADDRESS
 };
 
 char csym[NSYM + 1] =
 {
-	' ', '+', '-', '*', '/', '(', ')', '=', ',', '.', ';', '[', ']'
+	' ', '+', '-', '*', '/', '(', ')', '=', ',', '.', ';', '[', ']', '&'
 };
 
 #define MAXINS   8
