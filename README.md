@@ -24,14 +24,14 @@ term ->  unary_term
 unary_term -> array_term
 			  | &unary_term
 			  | *unary_term
-array_term -> scope_term
+array_term -> fact
 			  | array_term[expr]
-scope_term -> fact
-			  | scope_term::ident
-fact -> ident 
+fact -> scope_term
 		| number 
 		| -fact 
 		| (expr)
+scope_term -> ident
+			  | scope_term::ident
 ```
 
 ### 指针与数组声明的文法
