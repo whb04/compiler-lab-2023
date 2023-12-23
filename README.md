@@ -12,6 +12,30 @@
 
 ---
 
+### 一个可能的综合指针、数组、：：的文法
+
+```
+expr ->  term
+		| expr+term
+    	| expr-term
+term ->  unary_term 
+		| term*unary_term 
+		| term/unary_term
+unary_term -> array_term
+			  | &unary_term
+			  | *unary_term
+array_term -> scope_term
+			  | array_term[expr]
+scope_term -> fact
+			  | scope_term::ident
+fact -> ident 
+		| number 
+		| -fact 
+		| (expr)
+```
+
+
+
 ### 指针
 
 #### Lexical Analysis
