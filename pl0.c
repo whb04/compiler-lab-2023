@@ -357,7 +357,33 @@ void listcode(int from, int to)
 
 //////////////////////////////////////////////////////////////////////
 /*
-fact -> ident 
+prim_scope -> ident
+			  | prim_scope::ident
+*/
+//未完成
+void prim_scope(symset fsys){
+
+}
+
+//////////////////////////////////////////////////////////////////////
+/*
+scope -> prim_scope
+		 | ::prim_scope
+*/
+//未完成
+void scope(symset fsys){
+	if(sym == SYM_SCOPE){
+		getsym();
+		prim_scope(fsys);
+	}
+	else{
+		prim_scope(fsys);
+	}
+}
+
+//////////////////////////////////////////////////////////////////////
+/*
+fact -> scope
 		| number 
 		| -fact 
 		| (expr)
@@ -371,8 +397,8 @@ void factor(symset fsys)
 
 	if (inset(sym, facbegsys))
 	{
-		if (sym == SYM_IDENTIFIER)
-		{
+		if (sym == SYM_IDENTIFIER || sym == SYM_SCOPE)
+		{/*
 			if ((i = position(id)) == 0)
 			{
 				error(11); // Undeclared identifier.
@@ -395,6 +421,8 @@ void factor(symset fsys)
 				} // switch
 			}
 			getsym();
+			*/
+			scope(fsys);
 		}
 		else if (sym == SYM_NUMBER)
 		{
@@ -433,17 +461,7 @@ void factor(symset fsys)
 
 //////////////////////////////////////////////////////////////////////
 /*
-scope_term -> fact
-			  | scope_term::ident
-*/
-void scope_term(symset fsys){
-	
-}
-
-
-//////////////////////////////////////////////////////////////////////
-/*
-array_term -> scope_term
+array_term -> fact
 			  | array_term[expr]
 */
 void array_term(symset fsys){
@@ -472,12 +490,12 @@ void term(symset fsys)
 	symset set;
 	
 	set = uniteset(fsys, createset(SYM_TIMES, SYM_SLASH, SYM_NULL));
-	factor(set);
+	unary_term(set);
 	while (sym == SYM_TIMES || sym == SYM_SLASH)
 	{
 		mulop = sym;
 		getsym();
-		factor(set);
+		unary_term(set);
 		if (mulop == SYM_TIMES)
 		{
 			gen(OPR, 0, OPR_MUL);
