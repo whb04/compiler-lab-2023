@@ -1,13 +1,13 @@
 #include <stdio.h>
 
-#define NRW        12     // number of reserved words
-#define TXMAX      500    // length of identifier table
-#define MAXNUMLEN  14     // maximum number of digits in numbers
-#define NSYM       10     // maximum number of symbols in array ssym and csym
-#define MAXIDLEN   10     // length of identifiers
+#define NRW        12     // number of reserved words 添加新的保留字需要增大NRW
+#define TXMAX      500    // length of identifier table 标识符最多数量
+#define MAXNUMLEN  14     // maximum number of digits in numbers 数字最大长度
+#define NSYM       10     // maximum number of symbols in array ssym and csym 
+#define MAXIDLEN   10     // length of identifiers 标识符最大长度
 
-#define MAXADDRESS 32767  // maximum address
-#define MAXLEVEL   32     // maximum depth of nesting block
+#define MAXADDRESS 32767  // maximum address 
+#define MAXLEVEL   32     // maximum depth of nesting block 嵌套层数最大值
 #define CXMAX      500    // size of code array
 
 #define MAXSYM     30     // maximum number of symbols  
@@ -31,7 +31,7 @@ enum symtype
 	SYM_MINUS,          // '-'
 	SYM_TIMES,          // '*'
 	SYM_SLASH,          // '/'
-	SYM_ODD,            // 'odd'
+	SYM_ODD,            // 'odd'，判断一个expression是不是奇数
 	SYM_EQU,            // '='
 	SYM_NEQ,            // '<>'
 	SYM_LES,            // '<'
@@ -54,7 +54,9 @@ enum symtype
 	SYM_CONST,          // 'const'
 	SYM_VAR,            // 'var'
 	SYM_PROCEDURE,      // 'procedure'
-	SYM_PRINT           // 'print'
+	//new
+	SYM_PRINT,           // 'print'
+	SYM_ADDRESS        // '&'，取地址符
 };
 
 enum idtype
@@ -130,9 +132,9 @@ int  cc;         // character count
 int  ll;         // line length
 int  kk; 	   // program text index
 int  err; 	  // error flag
-int  cx;         // index of current instruction to be generated.
+int  cx;         // index of current instruction to be generated.当前要生成第几条中间代码
 int  level = 0; // current depth of block nesting
-int  tx = 0;    // current table index
+int  tx = 0;    // current table index 当前符号表的索引
 
 char line[80];
 
@@ -179,7 +181,7 @@ typedef struct
 	char name[MAXIDLEN + 1];
 	int  kind;
 	int  value;
-} comtab;
+} comtab; // 词法分析中用于描述常量的结构（放到符号表里）
 
 /**
  * @brief The symbol table entry for the PL/0 compiler.
@@ -199,7 +201,7 @@ typedef struct
 	int   kind;
 	short level;
 	short address;
-} mask;
+} mask; // 词法分析中用于描述过程和变量的结构（放到符号表里），与comtab大小相同
 
 FILE* infile;
 
