@@ -1,14 +1,22 @@
 var i;
 procedure p;
 begin
-  i := 2;
+    i := 2;
 end;
 procedure q;
 begin
-  i := i + 1;
+    i := i + 1;
 end;
 begin
-  i := 1;
-  call p;
-  call q;
+    i := 1;
+    print(i);
+    call p;
+    print(i);
+    call q;
+    print(i);
 end.
+
+# Expected output:
+1
+2
+3

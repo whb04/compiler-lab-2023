@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "set.h"
 
 #define NRW        12     // number of reserved words 添加新的保留字需要增大NRW
 #define TXMAX      500    // length of identifier table 标识符最多数量
@@ -218,5 +219,12 @@ typedef struct
 } mask; // 词法分析中用于描述过程和变量的结构（放到符号表里），与comtab大小相同
 
 FILE* infile;
+
+void factor(symset fsys);
+void scope_term(symset fsys);
+void array_term(symset fsys);
+void unary_term(symset fsys);
+void term(symset fsys);
+void expression(symset fsys);
 
 // EOF PL0.h

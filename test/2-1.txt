@@ -1,0 +1,18 @@
+var m;
+var *p;
+var **q;
+var ***r;
+var *a[10];
+begin
+    p:=&m;
+    q:=&p;
+    r:=&q;
+
+    ***r:=100;
+    a[0]:=&m;
+    a[1]:=p;
+    print(*a[0],*a[1],m);
+end.
+
+# Expected output:
+100 100 100

@@ -364,7 +364,6 @@ fact -> ident
 */
 void factor(symset fsys)
 {
-	void expression(symset fsys);
 	int i;
 	symset set;
 	

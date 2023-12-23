@@ -7,14 +7,8 @@ procedure p1;
             var i, a, b, c, d, e, f, g, h;
         begin
             i:=3;
-            a:=p1::i;
-            b:=p2::i;
-            c:=p3::i;
-            d:=i;
-            e:=::i;
-            f:=::p1::i;
-            g:=::p1::p2::i;
-            h:=::p1::p2::p3::i;
+            print(::i, p1::i, p2::i, i);
+            print(::i, ::p1::i, ::p1::p2::i, ::p1::p2::p3::i);
         end;
     begin
         i:=2;
@@ -29,3 +23,7 @@ begin
     i:=0;
     call p1;
 end.
+
+# Expected output:
+0 1 2 3
+0 1 2 3

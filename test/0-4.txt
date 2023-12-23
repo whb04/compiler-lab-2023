@@ -15,3 +15,8 @@ begin
   call q;
   print(i, i*i+2*(i+1));
 end.
+
+# Expected output:
+2
+3
+3 17

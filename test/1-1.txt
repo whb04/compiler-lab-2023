@@ -1,0 +1,11 @@
+var a;
+var b[10];
+var *c;
+var **d[16];
+begin
+    a := 1;
+    print(a);
+end.
+
+# Expected output:
+1
