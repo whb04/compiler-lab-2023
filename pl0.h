@@ -14,6 +14,8 @@
 
 #define STACKSIZE  1000   // maximum storage
 
+#define MAX_DIM    100    //maximum dim of array
+
 /**
  * @enum symtype
  * @brief Represents the different types of symbols in the PL/0 programming language.
@@ -54,17 +56,19 @@ enum symtype
 	SYM_CONST,          // 'const'
 	SYM_VAR,            // 'var'
 	SYM_PROCEDURE,      // 'procedure'
-	SYM_PRINT           // 'print'
+	SYM_PRINT,           // 'print'
+	SYM_LMIDPAREN,		//`[`
+	SYM_RMIDPAREN,		//`]`
 };
 
 enum idtype
 {
-	ID_CONSTANT, ID_VARIABLE, ID_PROCEDURE
+	ID_CONSTANT, ID_VARIABLE, ID_PROCEDURE, ID_ARRAY
 };
 
 enum opcode
 {
-	LIT, OPR, LOD, STO, CAL, INT, JMP, JPC, PRT
+	LIT, OPR, LOD, STO, CAL, INT, JMP, JPC, PRT, STA, LEA, LDA
 };
 
 enum oprcode
@@ -135,6 +139,17 @@ int  level = 0; // current depth of block nesting
 int  tx = 0;    // current table index
 
 char line[80];
+
+typedef struct array_attribute
+{
+	short address;//数组的基地址(即数组第一个元素在栈中的位置)
+	int size;//数组大小
+	int dim;//总维数 
+	int dim_size[MAX_DIM + 1];//每一维的范围大小
+} array_attribute;
+array_attribute array_table[TXMAX];//数组信息表
+struct array_attribute* Last_Array; //指向最后读到的数组
+int  arr_tx = 0; // 当前读到的数组在数组表中的索引
 
 instruction code[CXMAX];
 

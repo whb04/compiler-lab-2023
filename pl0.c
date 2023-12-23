@@ -225,6 +225,17 @@ void enter(int kind)
 		mk = (mask*) &table[tx];
 		mk->level = level;
 		break;
+	case ID_ARRAY:
+		mk = (mask*)&table[tx];
+		mk->level = level;
+		mk->address = arr_tx;//表项地址为在数组信息表中的索引
+		Last_Array = &(array_table[arr_tx]);
+		array_table[arr_tx].dim = 0;
+		array_table[arr_tx].size = 1;
+		array_table[arr_tx].dim_size[1] = 0; 
+		arr_tx++;
+		//这里我们无法给数组的size给出真正定义,所以我们不对dx做增大(即分配空间),等到分析完整个数组在做
+		break;	
 	} // switch
 } // enter
 
@@ -268,13 +279,62 @@ void constdeclaration()
 	 // There must be an identifier to follow 'const', 'var', or 'procedure'.
 } // constdeclaration
 
+void dimdeclaration() {
+	int i;
+	if (sym == SYM_LMIDPAREN) {
+		getsym();
+		switch (sym)
+		{
+		case SYM_NUMBER:
+			if (Last_Array->dim == MAX_DIM) { error(33); }//报错:维数过多
+			Last_Array->dim = Last_Array->dim + 1;//总维数+1
+			Last_Array->dim_size[Last_Array->dim] = num;
+			Last_Array->size = Last_Array->size * num;//数组大小*最外维范围大小
+			getsym();
+			if (sym == SYM_RMIDPAREN) //继续分析下一维
+			{ 
+				getsym();
+				dimdeclaration(); 
+			}
+			else { error(27); }//报错:missing `]`
+			break;
+		default:
+			error(29);//缺少维度大小
+		}
+	}
+	else {
+			dx += Last_Array->size;//为数组分配空间
+			Last_Array->address = dx - 1;//记录最后访问到的数组的基址		
+	}
+}
+
+void array_access(short arr_index, int dim, symset fsys) {//dim代表正在分析的维度
+	getsym();
+	if (sym == SYM_LMIDPAREN) {
+		gen(LIT, 0, array_table[arr_index].dim_size[dim + 1]);//将下一维size压栈
+		gen(OPR, 0, OPR_MUL);//将栈顶和次栈顶数值相乘，例如对应a[10][10]，a[3][4]，在读到3时，执行的中间代码依次为0*10=0，0+3=3,3*10=30,30+4=34.
+		getsym();
+		expression(fsys);
+		//expression中已经获取了下一个标识
+		gen(OPR, 0, OPR_ADD);//加上最外维上的偏移
+		array_access(arr_index, dim + 1, fsys);//访问下一维
+	}
+	else if (dim != array_table[arr_index].dim) { error(30); }//维度分析错误
+}
 //////////////////////////////////////////////////////////////////////
 void vardeclaration(void)
 {
 	if (sym == SYM_IDENTIFIER)
 	{
-		enter(ID_VARIABLE);
 		getsym();
+		if (sym == SYM_LMIDPAREN) {
+			enter(ID_ARRAY);
+			dimdeclaration();
+		}
+		else
+		{
+			enter(ID_VARIABLE); 
+		}
 	}
 	else
 	{
@@ -472,35 +532,56 @@ void condition(symset fsys)
 //////////////////////////////////////////////////////////////////////
 void statement(symset fsys)
 {
-	int i, cx1, cx2;
+	int i, cx1, cx2, arr_index;
 	symset set1, set;
 
-	if (sym == SYM_IDENTIFIER)
+	if (sym == SYM_IDENTIFIER)//如果是id开始,我们期待它是一个赋值语句
 	{ // variable assignment
 		mask* mk;
-		if (! (i = position(id)))
+		if (! (i = position(id)))//id再符号表中不存在,报错
 		{
 			error(11); // Undeclared identifier.
 		}
-		else if (table[i].kind != ID_VARIABLE)
+		else if (table[i].kind != ID_VARIABLE&& table[i].kind != ID_ARRAY)//id不是变量或者数组变量,报错,非法赋值,i=0
 		{
 			error(12); // Illegal assignment.
 			i = 0;
 		}
-		getsym();
-		if (sym == SYM_BECOMES)
+
+		if (table[i].kind == ID_VARIABLE)//variable assignment
 		{
+
+			getsym();//我们期待获得一个`:=`符号
+			if (sym == SYM_BECOMES)//如我们所愿,得到一个':=',赋值语句右部,我们期望存在一个expression
+			{
+				getsym();
+			}
+			else
+			{
+				error(13); // ':=' expected.
+			}
+			expression(fsys);//expression分析
+			mk = (mask*) &table[i];//这里i就是position,它是取到左值再符号表中的位置
+			if (i)//这里i是看有没有error  如果没有error 就进行STO操作,即将栈顶的expression的值赋给左值
+			{
+				gen(STO, level - mk->level, mk->address);
+			}
+		}
+		else if (table[i].kind == ID_ARRAY) {//数组元素的赋值
+			mk = (mask*)&table[i];
+			arr_index = mk->address;
+			gen(LEA, level - mk->level, array_table[arr_index].address);
+			gen(LIT, 0, 0);
+			set1 = createset(SYM_RMIDPAREN);
+			array_access(arr_index, 0, set1);//访问数组元素
+			//array_access 已经获取下一个标识符
+			if (sym != SYM_BECOMES) { error(13); }
+			gen(OPR, 0, OPR_MIN);
 			getsym();
-		}
-		else
-		{
-			error(13); // ':=' expected.
-		}
-		expression(fsys);
-		mk = (mask*) &table[i];
-		if (i)
-		{
-			gen(STO, level - mk->level, mk->address);
+			expression(fsys);//计算右值 
+			if (i) {
+				gen(STA, 0, 0);//将栈顶的值存入数组元素的地址(次栈顶)中
+			}
 		}
 	}
 	else if (sym == SYM_CALL)
