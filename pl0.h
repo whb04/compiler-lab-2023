@@ -191,37 +191,73 @@ char* mnemonic[MAXINS] =
 	"LIT", "OPR", "LOD", "STO", "CAL", "INT", "JMP", "JPC"
 };
 
+// typedef struct
+// {
+// 	char name[MAXIDLEN + 1];
+// 	int  kind;
+// 	int  value;
+// } comtab; // 词法分析中用于描述常量的结构（放到符号表里）
+
+// /**
+//  * @brief The symbol table entry for the PL/0 compiler.
+//  * 
+//  * This structure is used to store information about symbols in the PL/0 programming language, such as variables and constants.
+//  * It can be used as a `comtab` or a `mask` type, depending on the kind of the symbol.
+//  * Constants are stored as `comtab` types, while procedures and variables are stored as `mask` types.
+//  * 
+//  * @see table
+//  * @see mask
+//  */
+// comtab table[TXMAX];
+
+// typedef struct
+// {
+// 	char  name[MAXIDLEN + 1];
+// 	int   kind;
+// 	short level;
+// 	short address;
+// } mask; // 词法分析中用于描述过程和变量的结构（放到符号表里），与comtab大小相同
+
+// 符号表
 typedef struct
 {
-	char name[MAXIDLEN + 1];
-	int  kind;
-	int  value;
-} comtab; // 词法分析中用于描述常量的结构（放到符号表里）
+	char name[MAXIDLEN + 1]; // 名字
+	int kind; // const = 0, var = 1, proc = 2, array = 3
+	int level; // 所在层
+	int address; // 相对地址
+	int pos; // 符号在自己类型的属性表中的位置
+} symtab;
 
-/**
- * @brief The symbol table entry for the PL/0 compiler.
- * 
- * This structure is used to store information about symbols in the PL/0 programming language, such as variables and constants.
- * It can be used as a `comtab` or a `mask` type, depending on the kind of the symbol.
- * Constants are stored as `comtab` types, while procedures and variables are stored as `mask` types.
- * 
- * @see table
- * @see mask
- */
-comtab table[TXMAX];
+// 常量表
+int const_num, const_table[TXMAX];
 
+// 数组表
 typedef struct
 {
-	char  name[MAXIDLEN + 1];
-	int   kind;
-	short level;
-	short address;
-} mask; // 词法分析中用于描述过程和变量的结构（放到符号表里），与comtab大小相同
+	int size; // 数组大小
+	int dim; // 维数
+	int dim_size[MAX_DIM + 1]; // 每一维的范围大小
+} array_attr;
+int arr_num;
+array_attr array_table[TXMAX];
+
+// 过程表
+typedef struct
+{
+	int parent; // 父过程在符号表中的位置
+	int start; // 过程开始位置
+	int end; // 过程结束位置
+	// 过程的作用域为符号表中的区间[start, end)
+} proc_attr;
+int proc_num;
+proc_attr proc_table[TXMAX];
+
 
 FILE* infile;
 
+void prim_scope(symset fsys);
+void scope(symset fsys);
 void factor(symset fsys);
-void scope_term(symset fsys);
 void array_term(symset fsys);
 void unary_term(symset fsys);
 void term(symset fsys);
