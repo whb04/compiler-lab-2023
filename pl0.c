@@ -356,6 +356,12 @@ void listcode(int from, int to)
 } // listcode
 
 //////////////////////////////////////////////////////////////////////
+/*
+fact -> ident 
+		| number 
+		| -fact 
+		| (expr)
+*/
 void factor(symset fsys)
 {
 	void expression(symset fsys);
@@ -427,6 +433,40 @@ void factor(symset fsys)
 } // factor
 
 //////////////////////////////////////////////////////////////////////
+/*
+scope_term -> fact
+			  | scope_term::ident
+*/
+void scope_term(symset fsys){
+	
+}
+
+
+//////////////////////////////////////////////////////////////////////
+/*
+array_term -> scope_term
+			  | array_term[expr]
+*/
+void array_term(symset fsys){
+
+}
+
+//////////////////////////////////////////////////////////////////////
+/*
+unary_term -> array_term
+			  | &unary_term
+			  | *unary_term
+*/
+void unary_term(symset fsys){
+
+}
+
+//////////////////////////////////////////////////////////////////////
+/*
+term ->  unary_term 
+		| term*unary_term 
+		| term/unary_term
+*/
 void term(symset fsys)
 {
 	int mulop;
@@ -452,6 +492,11 @@ void term(symset fsys)
 } // term
 
 //////////////////////////////////////////////////////////////////////
+/*
+expr ->  term
+		| expr+term
+    	| expr-term
+*/
 void expression(symset fsys)
 {
 	int addop;

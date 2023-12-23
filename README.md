@@ -12,9 +12,36 @@
 
 ---
 
+### 一个可能的综合指针、数组、：：的文法
+
+```
+expr ->  term
+		| expr+term
+    	| expr-term
+term ->  unary_term 
+		| term*unary_term 
+		| term/unary_term
+unary_term -> array_term
+			  | &unary_term
+			  | *unary_term
+array_term -> scope_term
+			  | array_term[expr]
+scope_term -> fact
+			  | scope_term::ident
+fact -> ident 
+		| number 
+		| -fact 
+		| (expr)
+```
+
+
+
 ### 指针
 
 #### Lexical Analysis
+添加符号` SYM_ADDRESS`代表取地址符`& `
+
+指针算符与乘法运算符相同
 
 *To do...*
 
@@ -38,6 +65,15 @@
 
 #### Parsing
 
+定义数组的文法：
+
+```
+S -> var arrs;
+arrs -> arr | arrs,arr
+arr -> ptr | arr[size]
+ptr -> id | *ptr
+```
+
 *To do...*
 
 #### Semantic Analysis
@@ -59,8 +95,8 @@
 计划再分解 factor 到 word
 
 ```
-expr -> term+term | term-term
-term -> fact*fact | fact/fact
+expr -> term | expr+term | expr-term
+term -> fact | term*fact | term/fact
 fact -> word | number | -fact | (expr)
 word -> ident | word::ident
 ```
