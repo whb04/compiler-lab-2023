@@ -15,21 +15,21 @@
 ### 一个可能的综合指针、数组、：：的文法
 
 ```
-expr ->  term
-		| expr+term
-    	| expr-term
+expression ->  term
+		| expression+term
+    	| expression-term
 term ->  unary_term 
 		| term*unary_term 
 		| term/unary_term
 unary_term -> array_term
 			  | &unary_term
 			  | *unary_term
-array_term -> fact
-			  | array_term[expr]
-fact -> scope
+array_term -> factor
+			  | array_term[expression]
+factor -> scope
 		| number 
-		| -fact 
-		| (expr)
+		| -factor 
+		| (expression)
 scope -> prim_scope
 		 | ::prim_scope
 prim_scope -> ident
@@ -43,9 +43,9 @@ prim_scope -> ident
 复杂的指针与数组嵌套指类似var * (*q[10])[10]这样的。
 
 ```
-block -> const_declaration block
-		 | variable_declaration block
-		 | procedure_declaration block
+block -> constdeclaration block
+		 | vardeclaration block
+		 | "procedure" ident; block;
 		 | statement
 variable_declaration -> "var" declarator
 declarator -> direct_declarator
