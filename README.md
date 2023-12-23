@@ -34,7 +34,44 @@ fact -> ident
 		| (expr)
 ```
 
+### 指针与数组声明的文法
 
+#### 可以实现复杂的指针与数组嵌套的版本
+
+复杂的指针与数组嵌套指类似var * (*q[10])[10]这样的。
+
+```
+block -> const_declaration block
+		 | variable_declaration block
+		 | procedure_declaration block
+		 | statement
+variable_declaration -> "var" declarator
+declarator -> direct_declarator
+			  | pointer direct_declarator
+pointer -> *
+		   | *pointer
+direct_declarator -> ident
+					 | direct_declarator[number]
+					 | (declarator)
+```
+
+#### 简化的版本
+
+只需删去最后一行。可以实现实验文档中所有的例子。
+
+```
+block -> const_declaration block
+		 | variable_declaration block
+		 | procedure_declaration block
+		 | statement
+variable_declaration -> "var" declarator
+declarator -> direct_declarator
+			  | pointer direct_declarator
+pointer -> *
+		   | *pointer
+direct_declarator -> ident
+					 | direct_declarator[number]
+```
 
 ### 指针
 
