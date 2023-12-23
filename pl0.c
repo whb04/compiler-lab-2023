@@ -180,7 +180,7 @@ void gen(int x, int y, int z)
 } // gen
 
 //////////////////////////////////////////////////////////////////////
-// tests if error occurs and skips all symbols that do not belongs to s1 or s2.
+// tests if error occurs and skips all symbols that do not belongcxs to s1 or s2.
 void test(symset s1, symset s2, int n)
 {
 	symset s;
@@ -765,11 +765,12 @@ void block(symset fsys)
 	int savedTx;
 	symset set1, set;
 
-	dx = 3;
-	block_dx = dx;
+	dx = 3; // data allocation index
+	block_dx = dx; // useless? because dx will be reseted by next block_dx = dx;
 	mk = (mask*) &table[tx];
 	mk->address = cx;
-	gen(JMP, 0, 0);
+	// first instruction is JMP, jump to the main program
+	gen(JMP, 0, 0); // address placeholder, will be backpatched later
 	if (level > MAXLEVEL)
 	{
 		error(32); // There are too many levels.
@@ -878,13 +879,13 @@ void block(symset fsys)
 	}
 	while (inset(sym, declbegsys));
 
-	code[mk->address].a = cx;
+	code[mk->address].a = cx; // backpatch jump address of procedure
 	mk->address = cx;
 	cx0 = cx;
-	gen(INT, 0, block_dx);
+	gen(INT, 0, block_dx); // allocate space for this procedure
 	set1 = createset(SYM_SEMICOLON, SYM_END, SYM_NULL);
 	set = uniteset(set1, fsys);
-	statement(set);
+	statement(set); // compile statement
 	destroyset(set1);
 	destroyset(set);
 	gen(OPR, 0, OPR_RET); // return
@@ -996,6 +997,16 @@ void interpret()
 			// printf("%d\n", stack[top]);
 			top--;
 			break;
+		/**
+		 * Executes the CAL instruction.
+		 * 
+		 * This instruction is used to call a procedure or function. It generates a new block mark,
+		 * updates the base pointer, and sets the program counter to the address specified in the instruction.
+		 * 
+		 * @param stack The stack used for execution.
+		 * @param b The base pointer.
+		 * @param l The address specified in the instruction.
+		 */
 		case CAL:
 			stack[top + 1] = base(stack, b, i.l);
 			// generate new block mark
@@ -1004,12 +1015,39 @@ void interpret()
 			b = top + 1;
 			pc = i.a;
 			break;
+
+		/**
+		 * Executes the INT instruction.
+		 * 
+		 * This instruction is used to increment the top pointer of the stack by a given value.
+		 * 
+		 * @param stack The stack used for execution.
+		 * @param a The value to increment the top pointer by.
+		 */
 		case INT:
 			top += i.a;
 			break;
+
+		/**
+		 * Executes the JMP instruction.
+		 * 
+		 * This instruction is used to set the program counter to the address specified in the instruction.
+		 * 
+		 * @param a The address specified in the instruction.
+		 */
 		case JMP:
 			pc = i.a;
 			break;
+
+		/**
+		 * Executes the JPC instruction.
+		 * 
+		 * This instruction is used to conditionally set the program counter to the address specified in the instruction.
+		 * If the value at the top of the stack is 0, the program counter is set to the address; otherwise, it continues to the next instruction.
+		 * 
+		 * @param stack The stack used for execution.
+		 * @param a The address specified in the instruction.
+		 */
 		case JPC:
 			if (stack[top] == 0)
 				pc = i.a;
