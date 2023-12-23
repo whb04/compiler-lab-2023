@@ -279,6 +279,7 @@ void constdeclaration()
 	 // There must be an identifier to follow 'const', 'var', or 'procedure'.
 } // constdeclaration
 
+//////////////////////////////////////////////////////////////////////
 void dimdeclaration() {
 	int i;
 	if (sym == SYM_LMIDPAREN) {
@@ -308,6 +309,7 @@ void dimdeclaration() {
 	}
 }
 
+//////////////////////////////////////////////////////////////////////
 void array_access(short arr_index, int dim, symset fsys) {//dim代表正在分析的维度
 	getsym();
 	if (sym == SYM_LMIDPAREN) {
@@ -321,6 +323,25 @@ void array_access(short arr_index, int dim, symset fsys) {//dim代表正在分�
 	}
 	else if (dim != array_table[arr_index].dim) { error(30); }//维度分析错误
 }
+
+//////////////////////////////////////////////////////////////////////
+void pointer(symset fsys)
+{
+
+}
+
+//////////////////////////////////////////////////////////////////////
+void direct_declarator(symset fsys)
+{
+
+}
+
+//////////////////////////////////////////////////////////////////////
+void declarator(symset fsys)
+{
+
+}
+
 //////////////////////////////////////////////////////////////////////
 void vardeclaration(void)
 {
@@ -360,7 +381,8 @@ void listcode(int from, int to)
 prim_scope -> ident
 			  | prim_scope::ident
 */
-void prim_scope(symset fsys){
+void prim_scope(symset fsys)
+{
 
 }
 
@@ -369,7 +391,8 @@ void prim_scope(symset fsys){
 scope -> prim_scope
 		 | ::prim_scope
 */
-void scope(symset fsys){
+void scope(symset fsys)
+{
 	
 }
 
@@ -455,7 +478,8 @@ void factor(symset fsys)
 array_term -> fact
 			  | array_term[expr]
 */
-void array_term(symset fsys){
+void array_term(symset fsys)
+{
 
 }
 
@@ -465,7 +489,8 @@ unary_term -> array_term
 			  | &unary_term
 			  | *unary_term
 */
-void unary_term(symset fsys){
+void unary_term(symset fsys)
+{
 
 }
 

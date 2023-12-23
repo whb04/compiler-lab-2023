@@ -220,11 +220,23 @@ typedef struct
 
 FILE* infile;
 
+
+void prim_scope(symset fsys);
 void factor(symset fsys);
-void scope_term(symset fsys);
+void scope(symset fsys);
 void array_term(symset fsys);
 void unary_term(symset fsys);
 void term(symset fsys);
 void expression(symset fsys);
+
+void condition(symset fsys);
+
+void pointer(symset fsys);
+void direct_declarator(symset fsys);
+void declarator(symset fsys);
+void statement(symset fsys);
+void vardeclaration();
+void constdeclaration();
+void block(symset fsys);
 
 // EOF PL0.h
