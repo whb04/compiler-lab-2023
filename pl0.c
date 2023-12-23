@@ -360,6 +360,7 @@ void listcode(int from, int to)
 prim_scope -> ident
 			  | prim_scope::ident
 */
+//未完成
 void prim_scope(symset fsys){
 
 }
@@ -369,10 +370,16 @@ void prim_scope(symset fsys){
 scope -> prim_scope
 		 | ::prim_scope
 */
+//未完成
 void scope(symset fsys){
-	
+	if(sym == SYM_SCOPE){
+		getsym();
+		prim_scope(fsys);
+	}
+	else{
+		prim_scope(fsys);
+	}
 }
-
 
 //////////////////////////////////////////////////////////////////////
 /*
@@ -390,8 +397,8 @@ void factor(symset fsys)
 
 	if (inset(sym, facbegsys))
 	{
-		if (sym == SYM_IDENTIFIER)
-		{
+		if (sym == SYM_IDENTIFIER || sym == SYM_SCOPE)
+		{/*
 			if ((i = position(id)) == 0)
 			{
 				error(11); // Undeclared identifier.
@@ -414,6 +421,8 @@ void factor(symset fsys)
 				} // switch
 			}
 			getsym();
+			*/
+			scope(fsys);
 		}
 		else if (sym == SYM_NUMBER)
 		{
