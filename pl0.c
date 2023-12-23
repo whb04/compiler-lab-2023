@@ -357,17 +357,17 @@ void listcode(int from, int to)
 
 //////////////////////////////////////////////////////////////////////
 /*
-S -> id 
-	| S::id
+prim_scope -> ident
+			  | prim_scope::ident
 */
-void S(symset fsys){
+void prim_scope(symset fsys){
 
 }
 
 //////////////////////////////////////////////////////////////////////
 /*
-scope -> S 
-		| ::S
+scope -> prim_scope
+		 | ::prim_scope
 */
 void scope(symset fsys){
 	
