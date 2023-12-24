@@ -80,7 +80,7 @@ enum oprcode
 	OPR_RET, OPR_NEG, OPR_ADD, OPR_MIN,
 	OPR_MUL, OPR_DIV, OPR_ODD, OPR_EQU,
 	OPR_NEQ, OPR_LES, OPR_LEQ, OPR_GTR,
-	OPR_GEQ
+	OPR_GEQ, OPR_SWP
 };
 
 
@@ -126,8 +126,11 @@ char* err_msg[] =
 /* 29 */    "Missing size of array", //缺少维度大小
 /* 30 */    "Incorrect array dimension analysis", //维度分析错误
 /* 31 */    "",
-/* 32 */    "There are too many levels."
-/* 33 */	"There are too many array dimensions." //维数过多
+/* 32 */    "There are too many levels.",
+/* 33 */	"There are too many array dimensions.", //维数过多
+/* 34 */	"Illigal operation for this type.", //非法操作
+/* 35 */	"Can not add two pointers.",
+/* 36 */	"Procedure can not be an expression.",
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -235,7 +238,7 @@ void factor(symset fsys);
 void array_term(symset fsys);
 void unary_term(symset fsys);
 void term(symset fsys);
-void expression(symset fsys);
+type *expression(symset fsys, int cal_addr);
 
 void condition(symset fsys);
 
