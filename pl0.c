@@ -374,6 +374,11 @@ void vardeclaration()
 			enter(ID_VARIABLE, 0); 
 		}
 	}
+	else if (sym == SYM_POINTER)
+	{
+		getsym();
+		pointer(fsys);
+	}
 	else
 	{
 		error(4); // There must be an identifier to follow 'const', 'var', or 'procedure'.

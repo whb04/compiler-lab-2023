@@ -59,8 +59,9 @@ enum symtype
 	SYM_PROCEDURE,      // 'procedure'
 	SYM_LMIDPAREN,		//`[`
 	SYM_RMIDPAREN,		//`]`
-	SYM_PRINT,           // 'print'
-	SYM_ADDRESS        // '&'，取地址符
+	SYM_PRINT,          // 'print'
+	SYM_ADDRESS,        // '&'，取地址符
+	SYM_POINTER 		// '*'，指针
 };
 
 enum idtype
