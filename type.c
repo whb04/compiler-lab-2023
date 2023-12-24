@@ -18,9 +18,10 @@ void del_type(type *t){
 void print_type(type *t){
     printf("%s", type_name[t->tag]);
     if(t->inner_type){
-        printf("(");
+        if(t->tag == T_ARR)
+            printf("[%d]", t->arr_size);
+        printf(" of ");
         print_type(t->inner_type);
-        printf(")");
     }
 }
 

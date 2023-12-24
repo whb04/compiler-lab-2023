@@ -163,6 +163,8 @@ void getsym(void)
 			exit(1);
 		}
 	}
+	all_sym[++all_sym_num] = sym;
+	num_sym_val[all_sym_num] = num;
 } // getsym
 
 //////////////////////////////////////////////////////////////////////
@@ -199,7 +201,7 @@ void test(symset s1, symset s2, int n)
 int dx;  // data allocation index
 
 // enter object(constant, variable or procedre) into table.
-void enter(int kind, int proc)
+void enter(int kind, type *type)
 {
 	sym_num++;
 	strcpy(sym_tab[sym_num].name, id);
@@ -216,9 +218,17 @@ void enter(int kind, int proc)
 		sym_tab[sym_num].attr = &const_tab[const_num++];
 		break;
 	case ID_VARIABLE:
-		var_tab[var_num] = dx++;
+		// all identifiers declared by 'var' are variables
+		var_tab[var_num] = dx;
+		dx += type_size(type);
+		sym_tab[sym_num].type = type;
 		sym_tab[sym_num].level = level;
 		sym_tab[sym_num].attr = &var_tab[var_num++];
+		// debug
+		printf("var ");
+		print_type(type);
+		printf(" %s\nsize: %d\n", id, type_size(type));
+		// end debug
 		break;
 	case ID_PROCEDURE:
 		// 过程的入口地址在生成代码的时候回填
@@ -226,14 +236,6 @@ void enter(int kind, int proc)
 		sym_tab[sym_num].level = level;
 		sym_tab[sym_num].attr = &proc_tab[proc_num++];
 		break;
-	case ID_ARRAY:
-		// 数组的相对地址在生成代码的时候回填
-		// 这里我们无法给数组的size给出真正定义,所以我们不对dx做增大(即分配空间),等到分析完整个数组在做
-		array_tab[arr_num].dim = 0;
-		array_tab[arr_num].size = 1;
-		last_array = &array_tab[arr_num];
-		sym_tab[sym_num].attr = &array_tab[arr_num++];
-		break;	
 	} // switch
 } // enter
 
@@ -281,7 +283,7 @@ void constdeclaration()
 			getsym();
 			if (sym == SYM_NUMBER)
 			{
-				enter(ID_CONSTANT, 0);
+				enter(ID_CONSTANT, NULL);
 				getsym();
 			}
 			else
@@ -359,25 +361,56 @@ void declarator(symset fsys)
 
 }
 
+/**
+ * This function determines the type of a variable based on its declaration.
+ * It takes two pointers, `l` and `r`, which represent the left and right boundaries of the declaration.
+ * The function first checks if the declaration is enclosed in parentheses and removes them if present.
+ * Then it checks if the declaration is an array by looking for the right square bracket symbol.
+ * If it is an array, it validates the array declaration syntax and creates a new array type.
+ * If it is a pointer, it creates a new pointer type.
+ * If it is a simple identifier, it returns the default integer type.
+ * If the declaration is invalid or missing an identifier, it throws an error and returns NULL.
+ *
+ * @param l A pointer to the left boundary of the declaration.
+ * @param r A pointer to the right boundary of the declaration.
+ * @return A pointer to the determined type of the variable, or NULL if the declaration is invalid.
+ */
+type *var_type(int *l, int *r, type *t)
+{
+	while(*l == SYM_LPAREN && *(r-1) == SYM_RPAREN){
+		l++;
+		r--;
+	}
+	if(r-l < 1){
+		error(28);
+		return NULL;
+	}
+	if(*l == SYM_TIMES){
+		return var_type(l+1, r, new_type(T_PTR, t, 0));
+	}
+	if(*(r-1) == SYM_RMIDPAREN){
+		if (r-l<4 || *(r-2)!=SYM_NUMBER || *(r-3)!=SYM_LMIDPAREN) {
+			error(28);
+			return NULL;
+		}
+		return var_type(l, r-3, new_type(T_ARR, t, num_sym_val[r-2-all_sym]));
+	}
+	if(r-l != 1 || *l != SYM_IDENTIFIER){
+		error(28);
+		return NULL;
+	}
+	return t;
+}
+
 //////////////////////////////////////////////////////////////////////
 void vardeclaration()
 {
-	if (sym == SYM_IDENTIFIER)
-	{
+	int l, r;
+	l = all_sym_num;
+	while(sym != SYM_SEMICOLON && sym != SYM_COMMA)
 		getsym();
-		if (sym == SYM_LMIDPAREN) {
-			enter(ID_ARRAY, 0);
-			dimdeclaration();
-		}
-		else
-		{
-			enter(ID_VARIABLE, 0); 
-		}
-	}
-	else
-	{
-		error(4); // There must be an identifier to follow 'const', 'var', or 'procedure'.
-	}
+	r = all_sym_num;
+	enter(ID_VARIABLE, var_type(all_sym+l, all_sym+r, &int_type));
 } // vardeclaration
 
 //////////////////////////////////////////////////////////////////////
@@ -908,27 +941,36 @@ void block(symset fsys)
 			while (sym == SYM_IDENTIFIER);
 		} // if
 
-		if (sym == SYM_VAR)
+		while (sym == SYM_VAR)
 		{ // variable declarations
-			getsym();
+			// getsym();
+			// do
+			// {
+			// 	vardeclaration();
+			// 	while (sym == SYM_COMMA)
+			// 	{
+			// 		getsym();
+			// 		vardeclaration();
+			// 	}
+			// 	if (sym == SYM_SEMICOLON)
+			// 	{
+			// 		getsym();
+			// 	}
+			// 	else
+			// 	{
+			// 		error(5); // Missing ',' or ';'.
+			// 	}
+			// }
+			// while (sym == SYM_IDENTIFIER || sym == SYM_TIMES || sym == SYM_LPAREN);
 			do
 			{
+				getsym();
 				vardeclaration();
-				while (sym == SYM_COMMA)
-				{
-					getsym();
-					vardeclaration();
-				}
-				if (sym == SYM_SEMICOLON)
-				{
-					getsym();
-				}
-				else
-				{
-					error(5); // Missing ',' or ';'.
-				}
-			}
-			while (sym == SYM_IDENTIFIER);
+			} while (sym == SYM_COMMA);
+			if (sym == SYM_SEMICOLON)
+				getsym();
+			else
+				error(5); // Missing ',' or ';'.
 		} // if
 		block_dx = dx; //save dx before handling procedure call!
 		while (sym == SYM_PROCEDURE)
@@ -936,7 +978,7 @@ void block(symset fsys)
 			getsym();
 			if (sym == SYM_IDENTIFIER)
 			{
-				enter(ID_PROCEDURE, savedSn);
+				enter(ID_PROCEDURE, NULL);
 				getsym();
 			}
 			else
@@ -1210,7 +1252,7 @@ void main ()
 	set2 = uniteset(declbegsys, statbegsys);
 	set = uniteset(set1, set2);
 	id[0] = 0; // name of main program is empty string ""
-	enter(ID_PROCEDURE, 0); // enter the main program into 
+	enter(ID_PROCEDURE, NULL); // enter the main program into 
 	sym_tab[1].level = -1; // set the level of main program to -1
 	block(set);
 	destroyset(set1);

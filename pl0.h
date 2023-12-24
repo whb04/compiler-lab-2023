@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "set.h"
+#include "type.c"
 
 #define NRW        12     // number of reserved words 添加新的保留字需要增大NRW
 #define TXMAX      500    // length of identifier table 标识符最多数量
@@ -120,7 +121,7 @@ char* err_msg[] =
 /* 25 */    "The number is too great.",
 /* 26 */    "Can not locate identifier in a non-procedure block.",
 /* 27 */    "Missing ']'",
-/* 28 */    "",
+/* 28 */    "Declaration failed.",
 /* 29 */    "Missing size of array", //缺少维度大小
 /* 30 */    "Incorrect array dimension analysis", //维度分析错误
 /* 31 */    "",
@@ -141,6 +142,8 @@ int  cx;         // index of current instruction to be generated.当前要生成
 int  level = 0; // current depth of block nesting
 
 char line[80];
+int all_sym_num, all_sym[TXMAX]; // all symbols in the PL/0 source program
+int num_sym_val[TXMAX]; // the value of symbols, if it is a number
 
 // typedef struct array_attribute
 // {
@@ -224,6 +227,7 @@ char* mnemonic[MAXINS] =
 typedef struct
 {
 	char name[MAXIDLEN + 1]; // 名字
+	type *type; // 类型
 	int kind; // const = 0, var = 1, proc = 2, array = 3
 	int level; // 所在层
 	void *attr; // 符号在自己类型的属性表中的表项位置
