@@ -97,7 +97,7 @@ direct_declarator -> ident
 
 指针算符与乘法运算符相同
 
-添加符号 `SYM_LMIDPAREN` 代表 `[`, `SYM_RMIDPAREN` 代表 `]
+添加符号 `SYM_LMIDPAREN` 代表 `[`, `SYM_RMIDPAREN` 代表 `]`
 
 #### Parsing
 
@@ -117,9 +117,9 @@ expr -> term | expr+term | expr-term
 term -> fact | term*fact | term/fact
 fact -> num | unary | -fact
 unary -> arr | &unary | *unary
-arr -> scope | arr[expr]
-scope -> pscope | ::pscope
-pscope -> id | pscope::id
+arr -> val | arr[expr]
+val -> scope | ::scope | (expr)
+scope -> id | scope::id
 ```
 
 赋值操作的文法:
