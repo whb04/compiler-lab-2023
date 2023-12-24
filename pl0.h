@@ -197,33 +197,6 @@ char* mnemonic[MAXINS] =
 	"LIT", "OPR", "LOD", "STO", "CAL", "INT", "JMP", "JPC", "PRT", "STA", "LEA", "LDA"
 };
 
-// typedef struct
-// {
-// 	char name[MAXIDLEN + 1];
-// 	int  kind;
-// 	int  value;
-// } comtab; // 词法分析中用于描述常量的结构（放到符号表里）
-
-// /**
-//  * @brief The symbol table entry for the PL/0 compiler.
-//  * 
-//  * This structure is used to store information about symbols in the PL/0 programming language, such as variables and constants.
-//  * It can be used as a `comtab` or a `mask` type, depending on the kind of the symbol.
-//  * Constants are stored as `comtab` types, while procedures and variables are stored as `mask` types.
-//  * 
-//  * @see table
-//  * @see mask
-//  */
-// comtab table[TXMAX];
-
-// typedef struct
-// {
-// 	char  name[MAXIDLEN + 1];
-// 	int   kind;
-// 	short level;
-// 	short address;
-// } mask; // 词法分析中用于描述过程和变量的结构（放到符号表里），与comtab大小相同
-
 // 符号表
 typedef struct
 {
@@ -243,18 +216,6 @@ int const_tab[TXMAX]; // 常量的值
 // 变量表
 int var_num;
 int var_tab[TXMAX]; // 变量的相对地址
-
-// 数组表
-typedef struct
-{
-	int address; // 数组的相对地址
-	int size; // 数组大小
-	int dim; // 维数
-	int dim_size[MAX_DIM + 1]; // 每一维的范围大小
-} array_attr;
-int arr_num;
-array_attr array_tab[TXMAX];
-array_attr* last_array; // 指向最后读到的数组
 
 // 过程表
 typedef struct

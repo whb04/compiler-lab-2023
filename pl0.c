@@ -300,48 +300,19 @@ void constdeclaration()
 } // constdeclaration
 
 //////////////////////////////////////////////////////////////////////
-void dimdeclaration() {
-	int i;
-	if (sym == SYM_LMIDPAREN) {
-		getsym();
-		switch (sym)
-		{
-		case SYM_NUMBER:
-			if (last_array->dim >= MAX_DIM) { error(33); } // 报错:维数过多 There are too many array dimensions.
-			last_array->dim_size[last_array->dim++] = num; // 记录维度大小
-			last_array->size *= num; // 更新数组大小
-			getsym();
-			if (sym == SYM_RMIDPAREN) //继续分析下一维
-			{ 
-				getsym();
-				dimdeclaration(); 
-			}
-			else { error(27); }//报错:Missing ']'
-			break;
-		default:
-			error(29);//缺少维度大小 "Missing size of array"
-		}
-	}
-	else {
-		last_array->address = dx;
-		dx += last_array->size;//为数组分配空间
-	}
-}
-
-//////////////////////////////////////////////////////////////////////
-void array_access(array_attr *a, int d, symset fsys) { // d代表正在分析的维度
-	getsym();
-	if (sym == SYM_LMIDPAREN) {
-		gen(LIT, 0, a->dim_size[d + 1]);//将下一维size压栈
-		gen(OPR, 0, OPR_MUL);//将栈顶和次栈顶数值相乘，例如对应a[10][10]，a[3][4]，在读到3时，执行的中间代码依次为0*10=0，0+3=3,3*10=30,30+4=34.
-		getsym();
-		expression(fsys);
-		//expression中已经获取了下一个标识
-		gen(OPR, 0, OPR_ADD);//加上最外维上的偏移
-		array_access(a, d + 1, fsys);//访问下一维
-	}
-	else if (d != a->dim) { error(30); }//维度分析错误 "Incorrect array dimension analysis"
-}
+// void array_access(array_attr *a, int d, symset fsys) { // d代表正在分析的维度
+// 	getsym();
+// 	if (sym == SYM_LMIDPAREN) {
+// 		gen(LIT, 0, a->dim_size[d + 1]);//将下一维size压栈
+// 		gen(OPR, 0, OPR_MUL);//将栈顶和次栈顶数值相乘，例如对应a[10][10]，a[3][4]，在读到3时，执行的中间代码依次为0*10=0，0+3=3,3*10=30,30+4=34.
+// 		getsym();
+// 		expression(fsys);
+// 		//expression中已经获取了下一个标识
+// 		gen(OPR, 0, OPR_ADD);//加上最外维上的偏移
+// 		array_access(a, d + 1, fsys);//访问下一维
+// 	}
+// 	else if (d != a->dim) { error(30); }//维度分析错误 "Incorrect array dimension analysis"
+// }
 
 
 

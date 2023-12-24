@@ -114,12 +114,12 @@ ptr -> id | *ptr | (arr)
 
 ```
 expr -> term | expr+term | expr-term
-term -> fact | term*fact | term/fact
-fact -> num | unary | -fact
+term -> unary | term*unary | term/unary
 unary -> arr | &unary | *unary
-arr -> val | arr[expr]
-val -> scope | ::scope | (expr)
-scope -> id | scope::id
+arr -> fact | arr[expr]
+fact -> scope | num | -fact | (expr)
+scope -> pscope | ::pscope
+pscope -> id | pscope::id
 ```
 
 赋值操作的文法:
