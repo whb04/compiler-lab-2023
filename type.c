@@ -1,6 +1,6 @@
 #include "type.h"
 
-type *new_type(enum typetag tag, size_t arr_size, type *inner_type){
+type *new_type(enum typetag tag, type *inner_type, int arr_size){
     type *t = (type *)malloc(sizeof(type));
     t->tag = tag;
     t->arr_size = arr_size;
@@ -9,9 +9,10 @@ type *new_type(enum typetag tag, size_t arr_size, type *inner_type){
 }
 
 void del_type(type *t){
-    if(t->inner_type)
+    if(t->inner_type){
         del_type(t->inner_type);
-    free(t);
+        free(t);
+    }
 }
 
 void print_type(type *t){
