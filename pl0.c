@@ -560,7 +560,7 @@ term ->  unary_term
 		| term*unary_term 
 		| term/unary_term
 */
-void term(symset fsys)
+type *term(symset fsys)
 {
 	int mulop;
 	symset set;
@@ -591,30 +591,59 @@ expr ->  term
 		| expr+term
     	| expr-term
 */
-void expression(symset fsys)
+// cal_addr 为1时计算地址，为0时计算值
+type *expression(symset fsys, int cal_addr)
 {
 	int addop;
 	symset set;
+	type *t1,*t2;
 
 	set = uniteset(fsys, createset(SYM_PLUS, SYM_MINUS, SYM_NULL));
 	
-	term(set);
+	t1 = term(set);
 	while (sym == SYM_PLUS || sym == SYM_MINUS)
 	{
 		addop = sym;
 		getsym();
-		term(set);
-		if (addop == SYM_PLUS)
-		{
-			gen(OPR, 0, OPR_ADD);
-		}
-		else
-		{
-			gen(OPR, 0, OPR_MIN);
+		t2 = term(set);
+		if (t1->tag == T_ARR)
+			t1->tag = T_PTR;
+		if (t2->tag == T_ARR)
+			t2->tag = T_PTR;
+		if (t1->tag == T_PTR) {
+			if (t2->tag == T_PTR)
+				error(35);
+			else {
+				// ptr+int, ptr-int
+				gen(LIT, 0, type_size(t1->inner_type));
+				gen(OPR, 0, OPR_MUL);
+				if (addop == SYM_PLUS)
+					gen(OPR, 0, OPR_ADD);
+				else
+					gen(OPR, 0, OPR_MIN);
+			}
+		} else {
+			if (t2->tag == T_PTR) {
+				// int+ptr, int-ptr
+				if (addop == SYM_MINUS)
+					error(34);
+				gen(OPR, 0, OPR_SWP);
+				gen(LIT, 0, type_size(t2->inner_type));
+				gen(OPR, 0, OPR_MUL);
+				gen(OPR, 0, OPR_ADD);
+				t1->tag = T_PTR;
+			} else {
+				// int+int, int-int
+				if (addop == SYM_PLUS)
+					gen(OPR, 0, OPR_ADD);
+				else
+					gen(OPR, 0, OPR_MIN);
+			}
 		}
 	} // while
 
 	destroyset(set);
+	return t1;
 } // expression
 
 //////////////////////////////////////////////////////////////////////
@@ -1095,6 +1124,13 @@ void interpret()
 			case OPR_LEQ:
 				top--;
 				stack[top] = stack[top] <= stack[top + 1];
+				break;
+			case OPR_SWP:
+				// swap top two elements on stack
+				int tmp;
+				tmp = stack[top];
+				stack[top] = stack[top - 1];
+				stack[top - 1] = tmp;
 				break;
 			} // switch
 			break;
