@@ -2,7 +2,11 @@ var brr[20][20][20];
 begin
     brr[1][2][0]:=99;
     print(*(*(*(brr+1)+2)));
+    print(**(brr[1]+2));
+    print(brr[1][2][0])
 end.
 
 # Expected Output:
+99
+99
 99

@@ -14,7 +14,7 @@
 
 #define MAXSYM     30     // maximum number of symbols  
 
-#define STACKSIZE  1000   // maximum storage
+#define STACKSIZE  65536  // maximum storage
 
 #define MAX_DIM    100    //maximum dim of array
 
@@ -67,7 +67,7 @@ enum symtype
 
 enum idtype
 {
-	ID_CONSTANT, ID_VARIABLE, ID_PROCEDURE, ID_ARRAY
+	ID_CONSTANT, ID_VARIABLE, ID_PROCEDURE
 };
 
 enum opcode
@@ -80,7 +80,7 @@ enum oprcode
 	OPR_RET, OPR_NEG, OPR_ADD, OPR_MIN,
 	OPR_MUL, OPR_DIV, OPR_ODD, OPR_EQU,
 	OPR_NEQ, OPR_LES, OPR_LEQ, OPR_GTR,
-	OPR_GEQ
+	OPR_GEQ, OPR_SWP, OPR_POP
 };
 
 
@@ -125,9 +125,13 @@ char* err_msg[] =
 /* 28 */    "Declaration failed.",
 /* 29 */    "Missing size of array", //缺少维度大小
 /* 30 */    "Incorrect array dimension analysis", //维度分析错误
-/* 31 */    "",
-/* 32 */    "There are too many levels."
-/* 33 */	"There are too many array dimensions." //维数过多
+/* 31 */    "Missing identifier",
+/* 32 */    "There are too many levels.",
+/* 33 */	"There are too many array dimensions.", //维数过多
+/* 34 */	"Type deduction failed.", //类型推导失败
+/* 35 */	"Can not add two pointers.",
+/* 36 */	"Procedure can not be an expression.",
+/* 37 */	"Can not address" //不能取地址
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -197,33 +201,6 @@ char* mnemonic[MAXINS] =
 	"LIT", "OPR", "LOD", "STO", "CAL", "INT", "JMP", "JPC", "PRT", "STA", "LEA", "LDA"
 };
 
-// typedef struct
-// {
-// 	char name[MAXIDLEN + 1];
-// 	int  kind;
-// 	int  value;
-// } comtab; // 词法分析中用于描述常量的结构（放到符号表里）
-
-// /**
-//  * @brief The symbol table entry for the PL/0 compiler.
-//  * 
-//  * This structure is used to store information about symbols in the PL/0 programming language, such as variables and constants.
-//  * It can be used as a `comtab` or a `mask` type, depending on the kind of the symbol.
-//  * Constants are stored as `comtab` types, while procedures and variables are stored as `mask` types.
-//  * 
-//  * @see table
-//  * @see mask
-//  */
-// comtab table[TXMAX];
-
-// typedef struct
-// {
-// 	char  name[MAXIDLEN + 1];
-// 	int   kind;
-// 	short level;
-// 	short address;
-// } mask; // 词法分析中用于描述过程和变量的结构（放到符号表里），与comtab大小相同
-
 // 符号表
 typedef struct
 {
@@ -237,24 +214,14 @@ int sym_num;
 sym_attr sym_tab[TXMAX];
 
 // 常量表
+typedef int const_attr;
 int const_num;
-int const_tab[TXMAX]; // 常量的值
+const_attr const_tab[TXMAX]; // 常量的值
 
 // 变量表
+typedef int var_attr;
 int var_num;
-int var_tab[TXMAX]; // 变量的相对地址
-
-// 数组表
-typedef struct
-{
-	int address; // 数组的相对地址
-	int size; // 数组大小
-	int dim; // 维数
-	int dim_size[MAX_DIM + 1]; // 每一维的范围大小
-} array_attr;
-int arr_num;
-array_attr array_tab[TXMAX];
-array_attr* last_array; // 指向最后读到的数组
+var_attr var_tab[TXMAX]; // 变量的相对地址
 
 // 过程表
 typedef struct
@@ -268,13 +235,13 @@ proc_attr proc_tab[TXMAX]; // 过程的入口地址
 
 FILE* infile;
 
-void prim_scope(symset fsys, int proc);
-void scope(symset fsys);
-void factor(symset fsys);
-void array_term(symset fsys);
-void unary_term(symset fsys);
-void term(symset fsys);
-void expression(symset fsys);
+type *prim_scope(symset fsys, int proc);
+type *scope(symset fsys);
+type *factor(symset fsys);
+type *array_term(symset fsys, int cal_addr);
+type *unary_term(symset fsys, int cal_addr);
+type *term(symset fsys, int cal_addr);
+type *expression(symset fsys, int cal_addr);
 
 void condition(symset fsys);
 
