@@ -1168,6 +1168,16 @@ void interpret()
 				putchar(i.a);
 			top--;
 			break;
+		case STA: //(STA,--,--),将位于栈顶单元的内容，存入到次栈顶单元内容所代表的栈单元里，然后弹出栈顶和次栈顶
+			stack[stack[top - 1]] = stack[top];
+			top = top - 2;
+			break;
+		case LEA: //(LEA,层次差,相对偏移),取绝对地址压入栈顶
+			stack[++top] = base(stack, b, i.l) + i.a;
+			break;
+		case LDA: //(LDA,--,--),以当前栈顶单元的内容为地址来读取相应单元的值，并将该值存储到原先的栈顶单元中
+			stack[top] = stack[stack[top]];
+			break;
 		} // switch
 	}
 	while (pc);
