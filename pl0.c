@@ -179,6 +179,8 @@ void gen(int x, int y, int z)
 	code[cx].f = x;
 	code[cx].l = y;
 	code[cx++].a = z;
+	//debug
+	// printf("%5d  gen( %3s %d %d )\n", cx - 1, mnemonic[x], y, z);
 } // gen
 
 //////////////////////////////////////////////////////////////////////
@@ -224,11 +226,6 @@ void enter(int kind, type *type)
 		sym_tab[sym_num].type = type;
 		sym_tab[sym_num].level = level;
 		sym_tab[sym_num].attr = &var_tab[var_num++];
-		// debug
-		printf("var ");
-		print_type(type);
-		printf(" %s\nsize: %d\n", id, type_size(type));
-		// end debug
 		break;
 	case ID_PROCEDURE:
 		// 过程的入口地址在生成代码的时候回填
@@ -298,23 +295,6 @@ void constdeclaration()
 	} else	error(4);
 	 // There must be an identifier to follow 'const', 'var', or 'procedure'.
 } // constdeclaration
-
-//////////////////////////////////////////////////////////////////////
-// void array_access(array_attr *a, int d, symset fsys) { // d代表正在分析的维度
-// 	getsym();
-// 	if (sym == SYM_LMIDPAREN) {
-// 		gen(LIT, 0, a->dim_size[d + 1]);//将下一维size压栈
-// 		gen(OPR, 0, OPR_MUL);//将栈顶和次栈顶数值相乘，例如对应a[10][10]，a[3][4]，在读到3时，执行的中间代码依次为0*10=0，0+3=3,3*10=30,30+4=34.
-// 		getsym();
-// 		expression(fsys);
-// 		//expression中已经获取了下一个标识
-// 		gen(OPR, 0, OPR_ADD);//加上最外维上的偏移
-// 		array_access(a, d + 1, fsys);//访问下一维
-// 	}
-// 	else if (d != a->dim) { error(30); }//维度分析错误 "Incorrect array dimension analysis"
-// }
-
-
 
 /**
  * This function determines the type of a variable based on its declaration.
@@ -389,11 +369,12 @@ prim_scope -> ident
 			  | prim_scope::ident
 */
 //未完成
-type *prim_scope(symset fsys, int cal_addr, int proc)
+type *prim_scope(symset fsys, int proc)
 {
+	type *t;
 	int i;
-	int *c;
-	int *v;
+	const_attr *c;
+	var_attr *v;
 	proc_attr *p;
 	if (sym == SYM_IDENTIFIER)
 	{
@@ -404,15 +385,13 @@ type *prim_scope(symset fsys, int cal_addr, int proc)
 		if (!i)
 			error(11); // Undeclared identifier.
 	}
-	else // 这种情况应该不存在，报错信息不合适也不用管它，但是代码能跑就不敢动了 --LingLingMao
-	{
-		error(4); // There must be an identifier to follow 'const', 'var', or 'procedure'.
-	}
+	else
+		error(31);
 	getsym();
 	if (sym == SYM_SCOPE)
 	{
 		getsym();
-		prim_scope(fsys, i);
+		t = prim_scope(fsys, i);
 	}
 	else
 	{
@@ -420,20 +399,25 @@ type *prim_scope(symset fsys, int cal_addr, int proc)
 		{
 		case ID_CONSTANT:
 			c = sym_tab[i].attr;
-			gen(LIT, 0, *c);
+			gen(LIT, 0, -1); // address placeholder
+			gen(LIT, 0, *c); // value
+			t = &int_type;
 			break;
 		case ID_VARIABLE:
 			v = sym_tab[i].attr;
-			gen(LOD, level - sym_tab[i].level, *v);
+			t = copy_type(sym_tab[i].type);
+			gen(LEA, level - sym_tab[i].level, *v); // address
+			if (t->tag == T_ARR)
+				gen(LEA, level - sym_tab[i].level, *v); // value of array is address
+			else
+				gen(LOD, level - sym_tab[i].level, *v); // value of variable and pointer is value
 			break;
 		case ID_PROCEDURE:
-			error(21); // Procedure identifier can not be in an expression.
-			break;
-		case ID_ARRAY:
-			array_access(sym_tab[i].attr, 0, fsys);
+			error(21);
 			break;
 		} // switch
 	}
+	return t;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -441,18 +425,20 @@ type *prim_scope(symset fsys, int cal_addr, int proc)
 scope -> prim_scope
 		 | ::prim_scope
 */
-type *scope(symset fsys, int cal_addr)
+type *scope(symset fsys)
 {
+	type *t;
 	int i;
 	if (sym == SYM_SCOPE)
 	{
 		getsym();
-		prim_scope(fsys, 1);
+		t = prim_scope(fsys, 1);
 	}
 	else
 	{
-		prim_scope(fsys, 0);
+		t = prim_scope(fsys, 0);
 	}
+	return t;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -462,41 +448,19 @@ fact -> scope
 		| -fact 
 		| (expr)
 */
-type *factor(symset fsys, int cal_addr)
+type *factor(symset fsys)
 {
 	int i;
 	symset set;
+	type *t;
 	
 	test(facbegsys, fsys, 24); // The symbol can not be as the beginning of an expression.
 
 	if (inset(sym, facbegsys))
 	{
 		if (sym == SYM_IDENTIFIER || sym == SYM_SCOPE)
-		{/*
-			if ((i = position(id)) == 0)
-			{
-				error(11); // Undeclared identifier.
-			}
-			else
-			{
-				switch (table[i].kind)
-				{
-					mask* mk;
-				case ID_CONSTANT:
-					gen(LIT, 0, table[i].value);
-					break;
-				case ID_VARIABLE:
-					mk = (mask*) &table[i];
-					gen(LOD, level - mk->level, mk->address);
-					break;
-				case ID_PROCEDURE:
-					error(21); // Procedure identifier can not be in an expression.
-					break;
-				} // switch
-			}
-			getsym();
-			*/
-			scope(fsys);
+		{
+			t = scope(fsys);
 		}
 		else if (sym == SYM_NUMBER)
 		{
@@ -505,14 +469,16 @@ type *factor(symset fsys, int cal_addr)
 				error(25); // The number is too great.
 				num = 0;
 			}
-			gen(LIT, 0, num);
+			gen(LIT, 0, -1); // address placeholder
+			gen(LIT, 0, num); // value
 			getsym();
+			t = &int_type;
 		}
 		else if (sym == SYM_LPAREN)
 		{
 			getsym();
 			set = uniteset(createset(SYM_RPAREN, SYM_NULL), fsys);
-			expression(set);
+			t = expression(set, 0);
 			destroyset(set);
 			if (sym == SYM_RPAREN)
 			{
@@ -525,12 +491,15 @@ type *factor(symset fsys, int cal_addr)
 		}
 		else if(sym == SYM_MINUS) // UMINUS,  Expr -> '-' Expr
 		{  
-			 getsym();
-			 factor(fsys);
-			 gen(OPR, 0, OPR_NEG);
+			getsym();
+			t = factor(fsys);
+			if (t->tag != T_INT)
+				error(34);
+			gen(OPR, 0, OPR_NEG);
 		}
 		test(fsys, createset(SYM_LPAREN, SYM_NULL), 23);
 	} // if
+	return t;
 } // factor
 
 //////////////////////////////////////////////////////////////////////
@@ -540,7 +509,63 @@ array_term -> fact
 */
 type *array_term(symset fsys, int cal_addr)
 {
-
+	type *t1, *t2;
+	symset set;
+	set = uniteset(fsys, createset(SYM_LMIDPAREN, SYM_NULL));
+	t1 = factor(set);
+	// top is value, top-1 is address
+	if (sym != SYM_LMIDPAREN && cal_addr)
+		t1 = new_type(T_PTR, t1, 0);
+	else
+		gen(OPR, 0, OPR_SWP);
+	gen(OPR, 0, OPR_POP);
+	while (sym == SYM_LMIDPAREN) {
+		getsym();
+		t2 = expression(createset(SYM_RMIDPAREN, SYM_NULL), 0);
+		getsym();
+		if (t1->tag == T_ARR)
+			t1->tag = T_PTR;
+		if (t2->tag == T_ARR)
+			t2->tag = T_PTR;
+		if (t1->tag == T_PTR) {
+			if (t2->tag == T_PTR) {
+				// ptr[ptr]
+				error(35);
+			} else {
+				// ptr[int]
+				gen(LIT, 0, type_size(t1->inner_type));
+				gen(OPR, 0, OPR_MUL);
+				gen(OPR, 0, OPR_ADD);
+				// if cal_addr, do not resolve address in last dimension
+				if (!cal_addr || sym == SYM_LMIDPAREN) {
+					if (t1->inner_type->tag != T_ARR)
+						gen(LDA, 0, 0);
+					t1 = t1->inner_type;
+				}
+			}
+		} else {
+			if (t2->tag == T_PTR) {
+				// int[ptr]
+				gen(OPR, 0, OPR_SWP);
+				gen(LIT, 0, type_size(t2->inner_type));
+				gen(OPR, 0, OPR_MUL);
+				gen(OPR, 0, OPR_ADD);
+				t1 = t2;
+				if (!cal_addr || sym == SYM_LMIDPAREN) {
+					if (t1->inner_type->tag != T_ARR)
+						gen(LDA, 0, 0);
+					t1 = t1->inner_type;
+				}
+			} else {
+				// int[int]
+				error(34);
+			}
+		}
+	}
+	destroyset(set);
+	//debug
+	// printf("Arr end; sym: %d; type: ", sym);print_type(t1);printf("\n");
+	return t1;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -557,15 +582,16 @@ type *unary_term(symset fsys, int cal_addr)
 		if (cal_addr)
 			error(37);
 		t = unary_term(fsys, 1);
-		t = new_type(T_PTR, t, 0);
 	} else if (sym == SYM_TIMES) {
 		getsym();
 		t = unary_term(fsys, 0);
 		if (t->tag != T_PTR && t->tag != T_ARR)
 			error(34);
-		t = t->inner_type;
-		if (!cal_addr)
-			gen(LDA, 0, 0);
+		if (!cal_addr) {
+			if (t->inner_type->tag != T_ARR)
+				gen(LDA, 0, 0);
+			t = t->inner_type;
+		}
 	} else {
 		t = array_term(fsys, cal_addr);
 	}
@@ -685,13 +711,13 @@ void condition(symset fsys)
 	if (sym == SYM_ODD)
 	{
 		getsym();
-		expression(fsys);
+		expression(fsys, 0);
 		gen(OPR, 0, 6);
 	}
 	else
 	{
 		set = uniteset(relset, fsys);
-		expression(set);
+		expression(set, 0);
 		destroyset(set);
 		if (! inset(sym, relset))
 		{
@@ -701,7 +727,7 @@ void condition(symset fsys)
 		{
 			relop = sym;
 			getsym();
-			expression(fsys);
+			expression(fsys, 0);
 			switch (relop)
 			{
 			case SYM_EQU:
@@ -733,58 +759,9 @@ void statement(symset fsys)
 	int i, cx1, cx2;
 	symset set1, set;
 	sym_attr *s;
-	array_attr *a;
 	proc_attr *p;
 
-	if (sym == SYM_IDENTIFIER)//如果是id开始,我们期待它是一个赋值语句
-	{ // variable assignment
-		if (! (i = position(id)))//id再符号表中不存在,报错
-		{
-			error(11); // Undeclared identifier.
-		}
-		else if (sym_tab[i].kind != ID_VARIABLE&& sym_tab[i].kind != ID_ARRAY)//id不是变量或者数组变量,报错,非法赋值,i=0
-		{
-			error(12); // Illegal assignment.
-			i = 0;
-		}
-
-		if (sym_tab[i].kind == ID_VARIABLE)//variable assignment
-		{
-
-			getsym();//我们期待获得一个`:=`符号
-			if (sym == SYM_BECOMES)//如我们所愿,得到一个':=',赋值语句右部,我们期望存在一个expression
-			{
-				getsym();
-			}
-			else
-			{
-				error(13); // ':=' expected.
-			}
-			expression(fsys);//expression分析
-			s = &sym_tab[i];//这里i就是position,它是取到左值再符号表中的位置
-			if (i)//这里i是看有没有error  如果没有error 就进行STO操作,即将栈顶的expression的值赋给左值
-			{
-				gen(STO, level - s->level, *(int* )(s->attr));
-			}
-		}
-		else if (sym_tab[i].kind == ID_ARRAY) {//数组元素的赋值
-			s = &sym_tab[i];
-			a = s->attr;
-			gen(LEA, level - s->level, a->address); // 将数组元素的地址压栈
-			gen(LIT, 0, 0);
-			set1 = createset(SYM_RMIDPAREN);
-			array_access(a, 0, set1);//访问数组元素
-			//array_access 已经获取下一个标识符
-			if (sym != SYM_BECOMES) { error(13); } // ':=' expected.
-			gen(OPR, 0, OPR_MIN);
-			getsym();
-			expression(fsys);//计算右值 
-			if (i) {
-				gen(STA, 0, 0);//将栈顶的值存入数组元素的地址(次栈顶)中
-			}
-		}
-	}
-	else if (sym == SYM_CALL)
+	if (sym == SYM_CALL)
 	{ // procedure call
 		getsym();
 		if (sym != SYM_IDENTIFIER)
@@ -895,7 +872,7 @@ void statement(symset fsys)
 			getsym();
 			set1 = createset(SYM_RPAREN, SYM_COMMA, SYM_NULL);
 			set = uniteset(set1, fsys);
-			expression(set);
+			expression(set, 0);
 			destroyset(set1);
 			destroyset(set);
 			gen(PRT, 0, sym == SYM_COMMA ? ' ' : '\n');
@@ -908,6 +885,22 @@ void statement(symset fsys)
 		{
 			error(22); // Missing ')'.
 		}
+	} else if (sym == SYM_END) {
+		// do nothing
+	} else { // variable assignment
+		type *t1, *t2;
+		set1 = createset(SYM_BECOMES, SYM_NULL);
+		set = uniteset(set1, fsys);
+		t1 = expression(set, 1);
+		if (t1->tag != T_PTR && t1->tag != T_ARR)
+			error(37);
+		if (sym != SYM_BECOMES)
+			error(13);
+		getsym();
+		t2 = expression(fsys, 0);
+		if (!type_compatible(t1->inner_type, t2))
+			error(12);
+		gen(STA, 0, 0);
 	}
 	test(fsys, phi, 19);
 } // statement
@@ -959,25 +952,6 @@ void block(symset fsys)
 
 		while (sym == SYM_VAR)
 		{ // variable declarations
-			// getsym();
-			// do
-			// {
-			// 	vardeclaration();
-			// 	while (sym == SYM_COMMA)
-			// 	{
-			// 		getsym();
-			// 		vardeclaration();
-			// 	}
-			// 	if (sym == SYM_SEMICOLON)
-			// 	{
-			// 		getsym();
-			// 	}
-			// 	else
-			// 	{
-			// 		error(5); // Missing ',' or ';'.
-			// 	}
-			// }
-			// while (sym == SYM_IDENTIFIER || sym == SYM_TIMES || sym == SYM_LPAREN);
 			do
 			{
 				getsym();
@@ -1162,6 +1136,9 @@ void interpret()
 				stack[top] = stack[top - 1];
 				stack[top - 1] = tmp;
 				break;
+			case OPR_POP:
+				top--;
+				break;
 			} // switch
 			break;
 		case LOD:
@@ -1235,13 +1212,21 @@ void interpret()
 			top--;
 			break;
 		case STA: //(STA,--,--),将位于栈顶单元的内容，存入到次栈顶单元内容所代表的栈单元里，然后弹出栈顶和次栈顶
+			//debug
+			// printf("stack[%d]=%d\n", stack[top - 1], stack[top]);
 			stack[stack[top - 1]] = stack[top];
 			top = top - 2;
 			break;
 		case LEA: //(LEA,层次差,相对偏移),取绝对地址压入栈顶
+			//debug
+			// printf("push(%d)\n", base(stack, b, i.l) + i.a);
+
 			stack[++top] = base(stack, b, i.l) + i.a;
 			break;
 		case LDA: //(LDA,--,--),以当前栈顶单元的内容为地址来读取相应单元的值，并将该值存储到原先的栈顶单元中
+			//debug
+			// printf("stack[top] -> stack[%d]=%d\n", stack[top], stack[stack[top]]);
+
 			stack[top] = stack[stack[top]];
 			break;
 		} // switch

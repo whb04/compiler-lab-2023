@@ -22,6 +22,7 @@ type proc_type = {T_PROC, NULL, 0};
 
 type *new_type(enum typetag tag, type *inner_type, int arr_size);
 void del_type(type *t);
+type *copy_type(type *t);
 void print_type(type *t); // for debug
 int type_size(type *t);
 int type_equal(type *t1, type *t2);

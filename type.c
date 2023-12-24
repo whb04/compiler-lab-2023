@@ -15,6 +15,12 @@ void del_type(type *t){
     }
 }
 
+type *copy_type(type *t){
+    if(!t)
+        return NULL;
+    return new_type(t->tag, copy_type(t->inner_type), t->arr_size);
+}
+
 void print_type(type *t){
     printf("%s", type_name[t->tag]);
     if(t->inner_type){

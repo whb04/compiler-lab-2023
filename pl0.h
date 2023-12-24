@@ -14,7 +14,7 @@
 
 #define MAXSYM     30     // maximum number of symbols  
 
-#define STACKSIZE  1000   // maximum storage
+#define STACKSIZE  65536  // maximum storage
 
 #define MAX_DIM    100    //maximum dim of array
 
@@ -67,7 +67,7 @@ enum symtype
 
 enum idtype
 {
-	ID_CONSTANT, ID_VARIABLE, ID_PROCEDURE, ID_ARRAY
+	ID_CONSTANT, ID_VARIABLE, ID_PROCEDURE
 };
 
 enum opcode
@@ -80,7 +80,7 @@ enum oprcode
 	OPR_RET, OPR_NEG, OPR_ADD, OPR_MIN,
 	OPR_MUL, OPR_DIV, OPR_ODD, OPR_EQU,
 	OPR_NEQ, OPR_LES, OPR_LEQ, OPR_GTR,
-	OPR_GEQ, OPR_SWP
+	OPR_GEQ, OPR_SWP, OPR_POP
 };
 
 
@@ -125,7 +125,7 @@ char* err_msg[] =
 /* 28 */    "Declaration failed.",
 /* 29 */    "Missing size of array", //缺少维度大小
 /* 30 */    "Incorrect array dimension analysis", //维度分析错误
-/* 31 */    "",
+/* 31 */    "Missing identifier",
 /* 32 */    "There are too many levels.",
 /* 33 */	"There are too many array dimensions.", //维数过多
 /* 34 */	"Type deduction failed.", //类型推导失败
@@ -214,12 +214,14 @@ int sym_num;
 sym_attr sym_tab[TXMAX];
 
 // 常量表
+typedef int const_attr;
 int const_num;
-int const_tab[TXMAX]; // 常量的值
+const_attr const_tab[TXMAX]; // 常量的值
 
 // 变量表
+typedef int var_attr;
 int var_num;
-int var_tab[TXMAX]; // 变量的相对地址
+var_attr var_tab[TXMAX]; // 变量的相对地址
 
 // 过程表
 typedef struct
@@ -233,9 +235,9 @@ proc_attr proc_tab[TXMAX]; // 过程的入口地址
 
 FILE* infile;
 
-type *prim_scope(symset fsys, int cal_addr, int proc);
-type *scope(symset fsys, int cal_addr);
-type *factor(symset fsys, int cal_addr);
+type *prim_scope(symset fsys, int proc);
+type *scope(symset fsys);
+type *factor(symset fsys);
 type *array_term(symset fsys, int cal_addr);
 type *unary_term(symset fsys, int cal_addr);
 type *term(symset fsys, int cal_addr);
