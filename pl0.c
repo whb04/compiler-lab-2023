@@ -305,7 +305,7 @@ void dimdeclaration() {
 		switch (sym)
 		{
 		case SYM_NUMBER:
-			if (last_array->dim >= MAX_DIM) { error(33); } // 报错:维数过多 "The array dimensions are too many."
+			if (last_array->dim >= MAX_DIM) { error(33); } // 报错:维数过多 There are too many array dimensions.
 			last_array->dim_size[last_array->dim++] = num; // 记录维度大小
 			last_array->size *= num; // 更新数组大小
 			getsym();
