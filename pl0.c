@@ -479,6 +479,8 @@ type *factor(symset fsys)
 			getsym();
 			set = uniteset(createset(SYM_RPAREN, SYM_NULL), fsys);
 			t = expression(set, 0);
+			gen(LIT, 0, -1); // address placeholder
+			gen(OPR, 0, OPR_SWP); // swap value and address
 			destroyset(set);
 			if (sym == SYM_RPAREN)
 			{
