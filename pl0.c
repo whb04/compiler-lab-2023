@@ -307,7 +307,7 @@ void dimdeclaration() {
 		switch (sym)
 		{
 		case SYM_NUMBER:
-			if (last_array->dim >= MAX_DIM) { error(33); } // 报错:维数过多 "The array dimensions are too many."
+			if (last_array->dim >= MAX_DIM) { error(33); } // 报错:维数过多 There are too many array dimensions.
 			last_array->dim_size[last_array->dim++] = num; // 记录维度大小
 			last_array->size *= num; // 更新数组大小
 			getsym();
@@ -359,6 +359,47 @@ void direct_declarator(symset fsys)
 void declarator(symset fsys)
 {
 
+}
+
+/**
+ * This function determines the type of a variable based on its declaration.
+ * It takes two pointers, `l` and `r`, which represent the left and right boundaries of the declaration.
+ * The function first checks if the declaration is enclosed in parentheses and removes them if present.
+ * Then it checks if the declaration is an array by looking for the right square bracket symbol.
+ * If it is an array, it validates the array declaration syntax and creates a new array type.
+ * If it is a pointer, it creates a new pointer type.
+ * If it is a simple identifier, it returns the default integer type.
+ * If the declaration is invalid or missing an identifier, it throws an error and returns NULL.
+ *
+ * @param l A pointer to the left boundary of the declaration.
+ * @param r A pointer to the right boundary of the declaration.
+ * @return A pointer to the determined type of the variable, or NULL if the declaration is invalid.
+ */
+type *var_type(int *l, int *r, type *t)
+{
+	while(*l == SYM_LPAREN && *(r-1) == SYM_RPAREN){
+		l++;
+		r--;
+	}
+	if(r-l < 1){
+		error(28);
+		return NULL;
+	}
+	if(*l == SYM_TIMES){
+		return var_type(l+1, r, new_type(T_PTR, t, 0));
+	}
+	if(*(r-1) == SYM_RMIDPAREN){
+		if (r-l<4 || *(r-2)!=SYM_NUMBER || *(r-3)!=SYM_LMIDPAREN) {
+			error(28);
+			return NULL;
+		}
+		return var_type(l, r-3, new_type(T_ARR, t, num_sym_val[r-2-all_sym]));
+	}
+	if(r-l != 1 || *l != SYM_IDENTIFIER){
+		error(28);
+		return NULL;
+	}
+	return t;
 }
 
 /**

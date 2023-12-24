@@ -60,8 +60,9 @@ enum symtype
 	SYM_PROCEDURE,      // 'procedure'
 	SYM_LMIDPAREN,		//`[`
 	SYM_RMIDPAREN,		//`]`
-	SYM_PRINT,           // 'print'
-	SYM_ADDRESS        // '&'，取地址符
+	SYM_PRINT,          // 'print'
+	SYM_ADDRESS,        // '&'，取地址符
+	SYM_POINTER 		// '*'，指针
 };
 
 enum idtype
@@ -126,7 +127,7 @@ char* err_msg[] =
 /* 30 */    "Incorrect array dimension analysis", //维度分析错误
 /* 31 */    "",
 /* 32 */    "There are too many levels."
-/* 33 */	"The array dimensions are too many." //维数过多
+/* 33 */	"There are too many array dimensions." //维数过多
 };
 
 //////////////////////////////////////////////////////////////////////
