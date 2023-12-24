@@ -1,0 +1,26 @@
+var i;
+procedure p1;
+    var i;
+    procedure p2;
+        var i,a[6][7];
+        procedure p3;
+            var i;
+        begin
+            i:=*(*a+17);
+            print(p1::i, p2::i, i);
+            print(::i, ::p1::i, ::p1::p2::i, ::p1::p2::p3::i);
+        end;
+    begin
+        i:=2;
+        a[2][3]:=3;
+        call p3;
+    end;
+begin
+    i:=1;
+    call p2;
+end;
+
+begin
+    i:=0;
+    call p1;
+end.
