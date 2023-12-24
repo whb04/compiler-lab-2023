@@ -1,6 +1,6 @@
 #include "type.h"
 
-type *new_type(enum typetag tag, size_t arr_size, type *inner_type){
+type *new_type(enum typetag tag, type *inner_type, int arr_size){
     type *t = (type *)malloc(sizeof(type));
     t->tag = tag;
     t->arr_size = arr_size;
