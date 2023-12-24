@@ -389,7 +389,7 @@ prim_scope -> ident
 			  | prim_scope::ident
 */
 //未完成
-void prim_scope(symset fsys, int proc)
+type *prim_scope(symset fsys, int cal_addr, int proc)
 {
 	int i;
 	int *c;
@@ -441,7 +441,7 @@ void prim_scope(symset fsys, int proc)
 scope -> prim_scope
 		 | ::prim_scope
 */
-void scope(symset fsys)
+type *scope(symset fsys, int cal_addr)
 {
 	int i;
 	if (sym == SYM_SCOPE)
@@ -462,7 +462,7 @@ fact -> scope
 		| -fact 
 		| (expr)
 */
-void factor(symset fsys)
+type *factor(symset fsys, int cal_addr)
 {
 	int i;
 	symset set;
@@ -538,7 +538,7 @@ void factor(symset fsys)
 array_term -> fact
 			  | array_term[expr]
 */
-void array_term(symset fsys)
+type *array_term(symset fsys, int cal_addr)
 {
 
 }
@@ -549,9 +549,27 @@ unary_term -> array_term
 			  | &unary_term
 			  | *unary_term
 */
-void unary_term(symset fsys)
+type *unary_term(symset fsys, int cal_addr)
 {
-
+	type *t;
+	if (sym == SYM_ADDRESS) {
+		getsym();
+		if (cal_addr)
+			error(37);
+		t = unary_term(fsys, 1);
+		t = new_type(T_PTR, t, 0);
+	} else if (sym == SYM_TIMES) {
+		getsym();
+		t = unary_term(fsys, 0);
+		if (t->tag != T_PTR && t->tag != T_ARR)
+			error(34);
+		t = t->inner_type;
+		if (!cal_addr)
+			gen(LDA, 0, 0);
+	} else {
+		t = array_term(fsys, cal_addr);
+	}
+	return t;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -560,19 +578,23 @@ term ->  unary_term
 		| term*unary_term 
 		| term/unary_term
 */
-type *term(symset fsys)
+type *term(symset fsys, int cal_addr)
 {
 	int mulop;
 	symset set;
+	type *t1,*t2;
 	
 	set = uniteset(fsys, createset(SYM_TIMES, SYM_SLASH, SYM_NULL));
-	// unary_term(set);
-	factor(set);
+	t1 = unary_term(set, cal_addr);
 	while (sym == SYM_TIMES || sym == SYM_SLASH)
 	{
 		mulop = sym;
 		getsym();
-		unary_term(set);
+		if (cal_addr)
+			error(37);
+		t2 = unary_term(set, cal_addr);
+		if (t1->tag != T_ARR || t2->tag != T_ARR)
+			error(34);
 		if (mulop == SYM_TIMES)
 		{
 			gen(OPR, 0, OPR_MUL);
@@ -583,6 +605,7 @@ type *term(symset fsys)
 		}
 	} // while
 	destroyset(set);
+	return t1;
 } // term
 
 //////////////////////////////////////////////////////////////////////
@@ -600,20 +623,27 @@ type *expression(symset fsys, int cal_addr)
 
 	set = uniteset(fsys, createset(SYM_PLUS, SYM_MINUS, SYM_NULL));
 	
-	t1 = term(set);
+	t1 = term(set, cal_addr);
 	while (sym == SYM_PLUS || sym == SYM_MINUS)
 	{
 		addop = sym;
 		getsym();
-		t2 = term(set);
+		if (cal_addr)
+			error(37);
+		t2 = term(set, cal_addr);
 		if (t1->tag == T_ARR)
 			t1->tag = T_PTR;
 		if (t2->tag == T_ARR)
 			t2->tag = T_PTR;
 		if (t1->tag == T_PTR) {
-			if (t2->tag == T_PTR)
-				error(35);
-			else {
+			if (t2->tag == T_PTR) {
+				// ptr+ptr, ptr-ptr
+				if (addop == SYM_PLUS)
+					error(35);
+				if (!type_equal(t1->inner_type, t2->inner_type))
+					error(34);
+				gen(OPR, 0, OPR_MIN);
+			} else {
 				// ptr+int, ptr-int
 				gen(LIT, 0, type_size(t1->inner_type));
 				gen(OPR, 0, OPR_MUL);
