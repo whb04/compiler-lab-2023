@@ -120,12 +120,13 @@ char* err_msg[] =
 /* 24 */    "The symbol can not be as the beginning of an expression.",
 /* 25 */    "The number is too great.",
 /* 26 */    "Can not locate identifier in a non-procedure block.",
-/* 27 */    "",
+/* 27 */    "Missing ']'",
 /* 28 */    "",
-/* 29 */    "",
-/* 30 */    "",
+/* 29 */    "Missing size of array", //缺少维度大小
+/* 30 */    "Incorrect array dimension analysis", //维度分析错误
 /* 31 */    "",
 /* 32 */    "There are too many levels."
+/* 33 */	"The array dimensions are too many." //维数过多
 };
 
 //////////////////////////////////////////////////////////////////////
