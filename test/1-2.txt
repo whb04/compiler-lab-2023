@@ -1,6 +1,12 @@
 var x;
 var *p;
 var **q;
-p := &x;
-q := &p;
-**q := 1;
+begin
+    p := &x;
+    q := &p;
+    **q := 1;
+    print(x, *p, **q, 1);
+end.
+
+# Expected output:
+1 1 1 1

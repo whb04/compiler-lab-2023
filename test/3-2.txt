@@ -16,3 +16,4 @@ end.
 # Expected output:
 1
 2 1
+1
