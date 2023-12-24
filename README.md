@@ -19,6 +19,80 @@
 
 > by Mom0O0
 
+### 文法汇总
+
+```
+program -> block.
+
+block -> "const" constdeclaration; block
+		 | "var" variable_declaration; block
+		 | "procedure" ident; block; block
+		 | statement
+
+variable_declaration -> declarator
+						| delcarator, variable_declaration
+
+declarator -> direct_declarator
+			  | pointer direct_declarator
+
+pointer -> *
+		   | *pointer
+
+direct_declarator -> ident
+					 | direct_declarator[number]
+					 | (declarator)
+
+constdeclaration -> ident
+                    | ident, constdeclaration
+
+statement -> left_expression := expression
+             | "call" ident
+             | "begin" statements "end"
+             | "if" condition "then" statement
+             | "while" condition "do" statement
+             | "print" exprs
+
+statements -> statement; statements
+
+exprs -> expression
+         | expression, exprs
+
+condition-> "odd" expression
+            | expression compare expression
+
+compare -> = | <> | < | > | <= | >=
+
+
+
+expression ->  term
+		| expression+term
+    	| expression-term
+
+term ->  unary_term 
+		| term*unary_term 
+		| term/unary_term
+
+unary_term -> array_term
+			  | &unary_term
+			  | *unary_term
+
+array_term -> factor
+			  | array_term[expression]
+
+factor -> scope
+		| number 
+		| -factor 
+		| (expression)
+
+scope -> prim_scope
+		 | ::prim_scope
+
+prim_scope -> ident
+			  | prim_scope::ident
+```
+
+left_expression 文法同 expression, 但运行时计算的不是值而是地址.
+
 ### 一个可能的综合指针、数组、：：的文法
 
 ```
