@@ -128,9 +128,10 @@ char* err_msg[] =
 /* 31 */    "",
 /* 32 */    "There are too many levels.",
 /* 33 */	"There are too many array dimensions.", //维数过多
-/* 34 */	"Illigal operation for this type.", //非法操作
+/* 34 */	"Type deduction failed.", //类型推导失败
 /* 35 */	"Can not add two pointers.",
 /* 36 */	"Procedure can not be an expression.",
+/* 37 */	"Can not address" //不能取地址
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -232,12 +233,12 @@ proc_attr proc_tab[TXMAX]; // 过程的入口地址
 
 FILE* infile;
 
-void prim_scope(symset fsys, int proc);
-void scope(symset fsys);
-void factor(symset fsys);
-void array_term(symset fsys);
-void unary_term(symset fsys);
-void term(symset fsys);
+type *prim_scope(symset fsys, int cal_addr, int proc);
+type *scope(symset fsys, int cal_addr);
+type *factor(symset fsys, int cal_addr);
+type *array_term(symset fsys, int cal_addr);
+type *unary_term(symset fsys, int cal_addr);
+type *term(symset fsys, int cal_addr);
 type *expression(symset fsys, int cal_addr);
 
 void condition(symset fsys);
