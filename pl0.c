@@ -305,7 +305,7 @@ void dimdeclaration() {
 		switch (sym)
 		{
 		case SYM_NUMBER:
-			if (last_array->dim >= MAX_DIM) { error(33); } // 报错:维数过多
+			if (last_array->dim >= MAX_DIM) { error(33); } // 报错:维数过多 "The array dimensions are too many."
 			last_array->dim_size[last_array->dim++] = num; // 记录维度大小
 			last_array->size *= num; // 更新数组大小
 			getsym();
@@ -314,10 +314,10 @@ void dimdeclaration() {
 				getsym();
 				dimdeclaration(); 
 			}
-			else { error(27); }//报错:missing `]`
+			else { error(27); }//报错:Missing ']'
 			break;
 		default:
-			error(29);//缺少维度大小
+			error(29);//缺少维度大小 "Missing size of array"
 		}
 	}
 	else {
@@ -338,7 +338,7 @@ void array_access(array_attr *a, int d, symset fsys) { // d代表正在分析的
 		gen(OPR, 0, OPR_ADD);//加上最外维上的偏移
 		array_access(a, d + 1, fsys);//访问下一维
 	}
-	else if (d != a->dim) { error(30); }//维度分析错误
+	else if (d != a->dim) { error(30); }//维度分析错误 "Incorrect array dimension analysis"
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -414,7 +414,7 @@ void prim_scope(symset fsys, int proc)
 		if (!i)
 			error(11); // Undeclared identifier.
 	}
-	else
+	else // 这种情况应该不存在，报错信息不合适也不用管它，但是代码能跑就不敢动了 --LingLingMao
 	{
 		error(4); // There must be an identifier to follow 'const', 'var', or 'procedure'.
 	}
@@ -646,7 +646,7 @@ void condition(symset fsys)
 		destroyset(set);
 		if (! inset(sym, relset))
 		{
-			error(20);
+			error(20); // Relational operator expected.
 		}
 		else
 		{
@@ -726,7 +726,7 @@ void statement(symset fsys)
 			set1 = createset(SYM_RMIDPAREN);
 			array_access(a, 0, set1);//访问数组元素
 			//array_access 已经获取下一个标识符
-			if (sym != SYM_BECOMES) { error(13); }
+			if (sym != SYM_BECOMES) { error(13); } // ':=' expected.
 			gen(OPR, 0, OPR_MIN);
 			getsym();
 			expression(fsys);//计算右值 
@@ -796,7 +796,7 @@ void statement(symset fsys)
 			}
 			else
 			{
-				error(10);
+				error(10); // ';' expected.
 			}
 			statement(set);
 		} // while
