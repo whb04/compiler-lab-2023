@@ -13,14 +13,14 @@ char *type_name[] = {"int", "ptr", "arr", "proc"};
 typedef struct
 {
     enum typetag tag;
-    int arr_size;
     type *inner_type;
+    int arr_size;
 } type;
 
-type int_type = {T_INT, 0, NULL};
-type proc_type = {T_PROC, 0, NULL};
+type int_type = {T_INT, NULL, 0};
+type proc_type = {T_PROC, NULL, 0};
 
-type *new_type(enum typetag tag, int arr_size, type *inner_type);
+type *new_type(enum typetag tag, type *inner_type, int arr_size);
 void del_type(type *t);
 void print_type(type *t); // for debug
 int typesize(type *t);
