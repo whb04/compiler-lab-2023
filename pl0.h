@@ -206,7 +206,7 @@ typedef struct
 {
 	char name[MAXIDLEN + 1]; // 名字
 	type *type; // 类型
-	int kind; // const = 0, var = 1, proc = 2, array = 3
+	int kind; // const = 0, var = 1, proc = 2
 	int level; // 所在层
 	void *attr; // 符号在自己类型的属性表中的表项位置
 } sym_attr;
