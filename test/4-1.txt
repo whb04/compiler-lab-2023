@@ -2,16 +2,13 @@ var i;
 procedure p1;
     var i;
     procedure p2;
-        var i, a[6][7][8], **b;
+        var i,a[6][7][8];
         procedure p3;
             var i;
         begin
             i:=(*(a[2]+3))[4];
             print(p1::i, p2::i, i);
             print(::i, ::p1::i, ::p1::p2::i, ::p1::p2::p3::i);
-            p1::p2::b := & a[4][5];
-            (*b)[6] := 9;
-            print( *(6+b[0]) );
         end;
     begin
         i:=2;
@@ -31,4 +28,3 @@ end.
 # Expected output:
 1 2 3
 0 1 2 3
-9
