@@ -3,166 +3,26 @@
 **进度**
 
 - [x] 实现 print
-- [ ] 实现数组与指针
+- [x] 实现数组与指针
   - [x] 数组与指针的声明
   - [x] 类型推导
-  - [ ] 指针相关运算
-  - [ ] 数组相关运算
-  - [ ] 运算及赋值的类型检查
-
+  - [x] 指针相关运算
+  - [x] 数组相关运算
+  - [x] 运算及赋值的类型检查
 - [x] 实现作用域
-- [ ] *(其他，请输入文字）*
 
+实验要求及汇报ppt见 `/doc` 目录
 
+问题与改进建议
+
+- 取地址运算的设计有缺陷，现有的设计会在处理 `fact -> (expr)` 时丢失地址。可以修改栈的结构，使其同时存储表达式的值和地址。
+
+- 处理数组声明可以使用流式处理，只需实现 `replace_inner_type`
+- 词法分析、文法分析、代码生成、代码解释混杂在 `pl0.c` 中，可以写在多个文件中
 
 ---
 
-> by Mom0O0
 
-### 文法汇总
-
-```
-program -> block.
-
-block -> "const" constdeclaration; block
-		 | "var" variable_declaration; block
-		 | "procedure" ident; block; block
-		 | statement
-
-variable_declaration -> declarator
-						| delcarator, variable_declaration
-
-declarator -> direct_declarator
-			  | pointer direct_declarator
-
-pointer -> *
-		   | *pointer
-
-direct_declarator -> ident
-					 | direct_declarator[number]
-					 | (declarator)
-
-constdeclaration -> ident
-                    | ident, constdeclaration
-
-statement -> left_expression := expression
-             | "call" ident
-             | "begin" statements "end"
-             | "if" condition "then" statement
-             | "while" condition "do" statement
-             | "print" exprs
-
-statements -> statement; statements
-
-exprs -> expression
-         | expression, exprs
-
-condition-> "odd" expression
-            | expression compare expression
-
-compare -> = | <> | < | > | <= | >=
-
-
-
-expression ->  term
-		| expression+term
-    	| expression-term
-
-term ->  unary_term 
-		| term*unary_term 
-		| term/unary_term
-
-unary_term -> array_term
-			  | &unary_term
-			  | *unary_term
-
-array_term -> factor
-			  | array_term[expression]
-
-factor -> scope
-		| number 
-		| -factor 
-		| (expression)
-
-scope -> prim_scope
-		 | ::prim_scope
-
-prim_scope -> ident
-			  | prim_scope::ident
-```
-
-left_expression 文法同 expression, 但运行时计算的不是值而是地址.
-
-### 一个可能的综合指针、数组、：：的文法
-
-```
-expression ->  term
-		| expression+term
-    	| expression-term
-term ->  unary_term 
-		| term*unary_term 
-		| term/unary_term
-unary_term -> array_term
-			  | &unary_term
-			  | *unary_term
-array_term -> factor
-			  | array_term[expression]
-factor -> scope
-		| number 
-		| -factor 
-		| (expression)
-scope -> prim_scope
-		 | ::prim_scope
-prim_scope -> ident
-			  | prim_scope::ident
-```
-
-### 指针与数组声明的文法
-
-#### 可以实现复杂的指针与数组嵌套的版本
-
-复杂的指针与数组嵌套指类似var * (*q[10])[10]这样的。
-
-注意，现在文法符号与函数名不是一一对应的了。
-
-```
-block -> "const" constdeclaration; block
-		 | "var" variable_declaration; block
-		 | "procedure" ident; block; block
-		 | statement
-variable_declaration -> declarator
-						| delcarator, variable_declaration
-declarator -> direct_declarator
-			  | pointer direct_declarator
-pointer -> *
-		   | *pointer
-direct_declarator -> ident
-					 | direct_declarator[number]
-					 | (declarator)
-```
-
-#### 简化的版本
-
-只需删去最后一行。可以实现实验文档中所有的例子。
-
-```
-block -> "const" constdeclaration; block
-		 | "var" variable_declaration; block
-		 | "procedure" ident; block; block
-		 | statement
-variable_declaration -> declarator
-						| delcarator, variable_declaration
-declarator -> direct_declarator
-			  | pointer direct_declarator
-pointer -> *
-		   | *pointer
-direct_declarator -> ident
-					 | direct_declarator[number]
-```
-
-
-
-> by whb04
 
 ### 指针与数组
 
@@ -208,13 +68,13 @@ assign -> lexpr:=expr
 
 声明的文法不是 LL(1) 文法，故存储整个 var_dec 进行类型推导，从两侧向中间解析，直至遇到标识符时解析完成。详见 `var_type`
 
-`*`, `&`, `[]` 运算，类型检查: 
+`*`, `&`, `[]` 运算及类型检查详见文法名对应的函数
 
-*To do...*
+`&` 运算的设计缺陷已在上文提及
 
 #### Code Generation
 
-*To do...*
+详见代码
 
 ### 作用域
 
