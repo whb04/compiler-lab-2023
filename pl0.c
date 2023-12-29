@@ -689,7 +689,7 @@ type *expression(symset fsys, int cal_addr)
 				gen(LIT, 0, type_size(t2->inner_type));
 				gen(OPR, 0, OPR_MUL);
 				gen(OPR, 0, OPR_ADD);
-				t1->tag = T_PTR;
+				t1 = t2;
 			} else {
 				// int+int, int-int
 				if (addop == SYM_PLUS)
